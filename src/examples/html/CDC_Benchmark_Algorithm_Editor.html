@@ -1,5 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+<!--
+    File: CDC_Benchmark_Algorithm_Editor.html
+    Purpose: Form for editing and managing generic benchmark algorithms. 
+    The form allows users to define algorithm properties, test references, and evaluation conditions.
+    Use can export the configuration as JSON and CSV files, then import the CVS into a Google Sheet for use 
+    with the FAIR Champion Benchmark Quality Assessment tool.
+    The Google Sheet must be editable by anonymous users.
+-->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,7 +37,7 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #4285f4 0%, #673ab7 100%);
+            background: linear-gradient(135deg, #c5f442 0%, #47b73a 100%);
             color: white;
             padding: 32px 24px;
             text-align: center;
@@ -370,24 +378,21 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎯 CDC Benchmark Algorithm Editor</h1>
-            <p>Configure FAIR data assessment properties, test references, and conditions</p>
+            <h1>🎯 Generic Benchmark Algorithm Editor</h1>
+            <p>Use this form to generate a CSV file that can be imported into a Benchmark Configuration Google Sheet for use with the 
+      <a href="https://tools.ostrails.eu/champion/assess/algorithm/new" target="_blank" rel="noopener">FAIR Champion Benchmark Quality Assessment tool</a>
+    </p>
         </div>
-
         <div class="form-content">
             <!-- Statistics Section -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-number" id="testCount">17</div>
+                    <div class="stat-number" id="testCount">2</div>
                     <div class="stat-label">Test References</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" id="conditionCount">21</div>
+                    <div class="stat-number" id="conditionCount">2</div>
                     <div class="stat-label">Conditions</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="fairPrinciples">4</div>
-                    <div class="stat-label">FAIR Principles</div>
                 </div>
             </div>
 
@@ -401,7 +406,7 @@
                     <div class="section-content">
                         <div class="form-group">
                             <label for="algorithmName">Algorithm Name</label>
-                            <input type="text" id="algorithmName" value="CESSDA CDC benchmark algorithm" required>
+                            <input type="text" id="algorithmName" value="Generic benchmark algorithm" required>
                         </div>
                         
                         <div class="form-group">
@@ -425,7 +430,8 @@
                 <div class="section fade-in">
                     <div class="section-header">
                         <span class="icon">🧪</span>
-                        <span>Test References</span>
+                        <span>Test References  (see 
+          <a href="https://tests.ostrails.eu/tests/" target="_blank" rel="noopener">OSTrails FAIR tests</a>)</span>
                     </div>
                     <div class="section-content">
                         <button type="button" class="add-btn" onclick="addTestReference()">+ Add Test Reference</button>
@@ -456,16 +462,47 @@
                 </div>
 
                 <div class="button-group">
-                    <button type="button" class="btn-secondary" onclick="resetForm()">🔄 Reset Form</button>
-                    <button type="button" class="btn-secondary" onclick="validateForm()">✅ Validate</button>
-                    <button type="submit" class="btn-primary">💾 Export Configuration</button>
+                    <button type="button" class="btn-secondary" onclick="resetForm()" >
+                        🔄 Reset Form
+                    </button>
+                    <button
+                        type="button"
+                        class="icon"
+                        style="cursor:help; background:none; border:none; padding:0; font:inherit;"
+                        title="Hover for help"
+                        tabindex="0"
+                        onmouseover="showHelp('Reset Form - Restore the original Benchmark Algorithm data and lose any changes.')"
+                        onfocus="showHelp('Reset Form - Restore the original Benchmark Algorithm data and lose any changes.')"
+                    >❓</button>
+                    <button type="button" class="btn-secondary" onclick="validateForm()">
+                        ✅ Validate
+                        <button
+                            class="icon"
+                            style="cursor:help; background:none; border:none; padding:0; font:inherit;"
+                            title="Hover for help"
+                            tabindex="0"
+                            onmouseover="showHelp('Validate - Check if all required fields are filled correctly and show validation results.')"
+                            onfocus="showHelp('Validate - Check if all required fields are filled correctly and show validation results.')"
+                        >❓</button>
+                    </button>
+                    <button type="submit" class="btn-secondary" onclick="exportToGoogleSheetFormat(), exportToJSON">
+                        💾 Export Configuration
+                        <button
+                            class="icon"
+                            style="cursor:help; background:none; border:none; padding:0; font:inherit;"
+                            title="Hover for help"
+                            tabindex="0"
+                            onmouseover="showHelp('Export Configuration - Download the current configuration as JSON and CSV files.')"
+                            onfocus="showHelp('Export Configuration - Download the current configuration as JSON and CSV files.')"
+                        >❓</button>
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
-        // Initial data from the spreadsheet
+        // Sample data for initial test references and conditions
         const initialTestReferences = [
             { id: 'T1', guid: 'https://tests.ostrails.eu/tests/fc_unique_identifier', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
             { id: 'T2', guid: 'https://tests.ostrails.eu/tests/fc_unique_identifier', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
@@ -507,8 +544,8 @@
             { id: 'C18', description: 'Majority of FINDABLE tests passed', formula: 'T1 + T2 +T3 +T4 +T5 > 12', successMessage: 'Acceptable: Data mostly FINDABLE', failMessage: 'Unacceptable: Data mostly not FINDABLE' },
             { id: 'C19', description: 'Majority of ACCESSIBLE tests passed', formula: 'T6 + T7 +T8 + T9 > 13', successMessage: 'Acceptable: Data mostly ACCESSIBLE', failMessage: 'Unacceptable: Data mostly not ACCESSIBLE' },
             { id: 'C20', description: 'Majority of INTEROPERABLE tests passed', formula: 'T10 + T11 + T12 > 13', successMessage: 'Acceptable: Data mostly INTEROPERABLE', failMessage: 'Unacceptable: Data mostly not INTEROPERABLE' },
-            { id: 'C21', description: 'Majority of REUSABLE tests passed', formula: 'T13 + T14 + T14 + T16 + T17 > 12', successMessage: 'Acceptable: Data mostly REUSABLE', failMessage: 'Unacceptable: Data mostly not REUSABLE' }
-        ];
+            { id: 'C21', description: 'Majority of REUSABLE tests passed', formula: 'T13 + T14 + T14 + T16 + T17 > 12', successMessage: 'Acceptable: Data mostly REUSABLE', failMessage: 'Unacceptable: Data mostly not REUSABLE' }     
+    ];
 
         let testReferenceCount = 0;
         let conditionCount = 0;
@@ -538,24 +575,39 @@
                     <button type="button" class="remove-btn" onclick="removeElement(this.closest('.test-reference-item'))">Remove</button>
                 </div>
                 <div class="form-group">
-                    <label>Test ID</label>
+                    <label>
+                        Test ID
+                        <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Test ID - Enter a unique identifier for this test reference.')">❓</span>
+                    </label>
                     <input type="text" value="${data ? data.id : 'T' + testReferenceCount}" name="testId" required>
                 </div>
                 <div class="form-group">
-                    <label>Test GUID (URL)</label>
+                    <label title="Use a test from the OSTrails FAIR tests collection">
+                        Enter test GUID (URL)
+                        <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Test GUID - Use a test from https://tests.ostrails.eu/tests/')">❓</span>
+                    </label>
                     <input type="url" value="${data ? data.guid : ''}" name="testGuid" placeholder="https://tests.ostrails.eu/tests/..." required>
                 </div>
                 <div class="row-three">
                     <div class="form-group">
-                        <label>Pass Weight</label>
+                        <label title="Use an integer greater than zero">
+                            Pass Weight
+                            <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Pass Weight - Use an integer greater than zero.')">❓</span>
+                        </label>
                         <input type="number" value="${data ? data.passWeight : 5}" name="passWeight" required>
                     </div>
                     <div class="form-group">
-                        <label>Fail Weight</label>
+                        <label title="Use an integer less than zero">
+                            Fail Weight
+                            <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Fail Weight - Use an integer less than zero.')">❓</span>
+                        </label>
                         <input type="number" value="${data ? data.failWeight : -1}" name="failWeight" required>
                     </div>
                     <div class="form-group">
-                        <label>Indeterminate Weight</label>
+                        <label title="Use an integer between the Pass and Fail weight range, typically zero">
+                            Indeterminate Weight
+                            <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Indeterminate Weight - Use an integer between the Pass and Fail weight range, typically zero.')">❓</span>
+                        </label>
                         <input type="number" value="${data ? data.indeterminateWeight : 0}" name="indeterminateWeight" required>
                     </div>
                 </div>
@@ -575,24 +627,39 @@
                     <button type="button" class="remove-btn" onclick="removeElement(this.closest('.condition-item'))">Remove</button>
                 </div>
                 <div class="form-group">
-                    <label>Condition ID</label>
+                    <label>
+                        Condition ID
+                        <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Condition ID - Enter a unique identifier for this condition.')">❓</span>
+                    </label>
                     <input type="text" value="${data ? data.id : 'C' + conditionCount}" name="conditionId" required>
                 </div>
                 <div class="form-group">
-                    <label>Description</label>
+                    <label>
+                        Description
+                        <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Condition Description - Enter a short description for this evaluation condition.')">❓</span>
+                    </label>
                     <textarea name="conditionDescription" rows="2" required>${data ? data.description : ''}</textarea>
                 </div>
                 <div class="form-group">
-                    <label>Formula</label>
+                    <label>
+                        Formula
+                        <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Formula - Enter a logical formula using test IDs. Ruby syntax is used for the calculation (e.g. conditional equals is == not =).')">❓</span>
+                    </label>
                     <input type="text" value="${data ? data.formula : ''}" name="conditionFormula" placeholder="e.g., T1 > 0" required>
                 </div>
                 <div class="row">
                     <div class="form-group">
-                        <label>Success Message</label>
+                        <label>
+                            Success Message
+                            <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Success Message - Enter the message shown when the condition is met.')">❓</span>
+                        </label>
                         <textarea name="successMessage" rows="3" required>${data ? data.successMessage : ''}</textarea>
                     </div>
                     <div class="form-group">
-                        <label>Fail Message</label>
+                        <label>
+                            Fail Message
+                            <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Fail Message - Enter the message shown when the condition is NOT met.')">❓</span>
+                        </label>
                         <textarea name="failMessage" rows="3" required>${data ? data.failMessage : ''}</textarea>
                     </div>
                 </div>
@@ -603,6 +670,12 @@
 
         function removeElement(element) {
             if (confirm('Are you sure you want to remove this item?')) {
+               type = element.classList.contains('test-reference-item') ? 'Test Reference' : 'Condition';
+                if (type === 'Test Reference') {
+                    testReferenceCount--;
+                } else {
+                    conditionCount--;
+                }
                 element.remove();
                 updateStats();
             }
@@ -615,7 +688,6 @@
 
         function validateForm() {
             const form = document.getElementById('algorithmForm');
-            const formData = new FormData(form);
             let isValid = true;
             let errors = [];
 
@@ -660,13 +732,13 @@
             try {
                 new URL(string);
                 return true;
-            } catch (_) {
+            } catch (error) {
                 return false;
             }
         }
 
         function resetForm() {
-            if (confirm('Are you sure you want to reset the form? This will restore the original CDC Benchmark Algorithm data and lose any changes.')) {
+            if (confirm('Are you sure you want to reset the form? This will restore the original Benchmark Algorithm data and lose any changes.')) {
                 // Reset form to loading state
                 document.body.classList.add('loading');
                 
@@ -677,7 +749,7 @@
                     conditionCount = 0;
                     
                     // Reset property values
-                    document.getElementById('algorithmName').value = 'CESSDA CDC benchmark algorithm';
+                    document.getElementById('algorithmName').value = 'Generic benchmark algorithm';
                     document.getElementById('benchmarkGuid').value = 'https://ostrails.github.io/sandbox/mockbenchmark1.ttl';
                     document.getElementById('relevantCommunity').value = 'http://www.fairsharing.org/ontology/subject/SRAO_0000002';
                     document.getElementById('digitalObjectType').value = 'https://schema.org/Dataset';
@@ -689,7 +761,6 @@
         }
 
         function exportToJSON() {
-            const form = document.getElementById('algorithmForm');
             
             // Collect property data
             const propertyData = {
@@ -729,7 +800,7 @@
 
             return {
                 metadata: {
-                    title: "CDC Benchmark Algorithm Configuration",
+                    title: "Generic Benchmark Algorithm Configuration",
                     version: "1.0",
                     exportedAt: new Date().toISOString(),
                     totalTests: testReferences.length,
@@ -789,7 +860,7 @@
                 const jsonUrl = URL.createObjectURL(jsonBlob);
                 const jsonLink = document.createElement('a');
                 jsonLink.href = jsonUrl;
-                jsonLink.download = `cdc_benchmark_algorithm_${new Date().toISOString().split('T')[0]}.json`;
+                jsonLink.download = `generic_benchmark_algorithm_${new Date().toISOString().split('T')[0]}.json`;
                 document.body.appendChild(jsonLink);
                 jsonLink.click();
                 document.body.removeChild(jsonLink);
@@ -800,7 +871,7 @@
                 const csvUrl = URL.createObjectURL(csvBlob);
                 const csvLink = document.createElement('a');
                 csvLink.href = csvUrl;
-                csvLink.download = `cdc_benchmark_algorithm_${new Date().toISOString().split('T')[0]}.csv`;
+                csvLink.download = `generic_benchmark_algorithm_${new Date().toISOString().split('T')[0]}.csv`;
                 document.body.appendChild(csvLink);
                 csvLink.click();
                 document.body.removeChild(csvLink);

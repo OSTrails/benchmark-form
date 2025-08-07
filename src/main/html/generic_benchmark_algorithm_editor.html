@@ -7,6 +7,8 @@
     Use can export the configuration as JSON and CSV files, then import the CVS into a Google Sheet for use 
     with the FAIR Champion Benchmark Quality Assessment tool.
     The Google Sheet must be editable by anonymous users.
+
+    TODO: review the use of the 'xxxCount--' code in the removeElement function.
 -->
 <head>
     <meta charset="UTF-8">
@@ -434,7 +436,7 @@
           <a href="https://tests.ostrails.eu/tests/" target="_blank" rel="noopener">OSTrails FAIR tests</a>)</span>
                     </div>
                     <div class="section-content">
-                        <button type="button" class="add-btn" onmouseover="addTestReference()" onfocus="addTestReference()">+ Add Test Reference</button>
+                        <button type="button" class="add-btn" onclick="addTestReference()">+ Add Test Reference</button>
                         <div class="progress-bar">
                             <div class="progress-fill" style="width: 100%"></div>
                         </div>
@@ -451,7 +453,7 @@
                         <span>Evaluation Conditions</span>
                     </div>
                     <div class="section-content">
-                        <button type="button" class="add-btn" onmouseover="addCondition()" onfocus="addCondition()">+ Add Condition</button>
+                        <button type="button" class="add-btn" onclick="addCondition()">+ Add Condition</button>
                         <div class="progress-bar">
                             <div class="progress-fill" style="width: 100%"></div>
                         </div>
@@ -462,33 +464,38 @@
                 </div>
 
                 <div class="button-group">
-                    <button type="button" class="btn-secondary" onmouseover="resetForm()" onfocus="resetForm()">
+                    <button type="button" class="btn-secondary" onclick="resetForm()" >
                         🔄 Reset Form
+                    </button>
+                    <button
+                        type="button"
+                        class="icon"
+                        style="cursor:help; background:none; border:none; padding:0; font:inherit;"
+                        title="Hover for help"
+                        tabindex="0"
+                        onmouseover="showHelp('Reset Form - Restore the original Benchmark Algorithm data and lose any changes.')"
+                        onfocus="showHelp('Reset Form - Restore the original Benchmark Algorithm data and lose any changes.')"
+                    >❓</button>
+                    <button type="button" class="btn-secondary" onclick="validateForm()">
+                        ✅ Validate
                         <button
-                            type="button"
                             class="icon"
                             style="cursor:help; background:none; border:none; padding:0; font:inherit;"
                             title="Hover for help"
                             tabindex="0"
-                            onmouseover="showHelp('Reset Form - Restore the original Benchmark Algorithm data and lose any changes.')"
-                            onfocus="showHelp('Reset Form - Restore the original Benchmark Algorithm data and lose any changes.')"
-                            onclick="showHelp('Reset Form - Restore the original Benchmark Algorithm data and lose any changes.')"
+                            onmouseover="showHelp('Validate - Check if all required fields are filled correctly and show validation results.')"
+                            onfocus="showHelp('Validate - Check if all required fields are filled correctly and show validation results.')"
                         >❓</button>
-                    </button></button>
-                    <button type="button" class="btn-secondary" onmouseover="validateForm()" onfocus="validateForm()">
-                        ✅ Validate
                     </button>
-                    <button type="submit" class="btn-primary">
+                    <button type="submit" class="btn-secondary" onclick="exportToGoogleSheetFormat(), exportToJSON">
                         💾 Export Configuration
                         <button
-                            type="button"
                             class="icon"
                             style="cursor:help; background:none; border:none; padding:0; font:inherit;"
                             title="Hover for help"
                             tabindex="0"
                             onmouseover="showHelp('Export Configuration - Download the current configuration as JSON and CSV files.')"
                             onfocus="showHelp('Export Configuration - Download the current configuration as JSON and CSV files.')"
-                            onclick="showHelp('Export Configuration - Download the current configuration as JSON and CSV files.')"
                         >❓</button>
                     </button>
                 </div>
@@ -532,7 +539,7 @@
             div.innerHTML = `
                 <div class="item-header">
                     <h4>🧪 ${data ? data.id : 'T' + testReferenceCount}</h4>
-                    <button type="button" class="remove-btn" onmouseover="removeElement(this.closest('.test-reference-item'))">Remove</button>
+                    <button type="button" class="remove-btn" onclick="removeElement(this.closest('.test-reference-item'))">Remove</button>
                 </div>
                 <div class="form-group">
                     <label>
@@ -584,7 +591,7 @@
             div.innerHTML = `
                 <div class="item-header">
                     <h4>⚙️ ${data ? data.id : 'C' + conditionCount}</h4>
-                    <button type="button" class="remove-btn" onmouseover="removeElement(this.closest('.condition-item'))">Remove</button>
+                    <button type="button" class="remove-btn" onclick="removeElement(this.closest('.condition-item'))">Remove</button>
                 </div>
                 <div class="form-group">
                     <label>
@@ -628,8 +635,24 @@
             updateStats();
         }
 
+        <!--
+        With the 'xxxCount--' code, the count of test references and conditions is decremented when an item is removed.
+        This means that the next item of the same type will have the correct ID (e.g., T1, T2, C1, C2).
+        However, it only works as expected if the highest ID is removed. Otherwise duplicate IDs wil occur.
+
+        Without the 'xxxCount--' code, the count of test references and conditions is not decremented when an item is removed.
+        This means that the next item of the same type will continue to increment from the last count (e.g., T3, T4, C3, C4).
+        This is simpler and avoids issues with duplicate IDs, but may not reflect the actual number of items in the list.
+
+        -->
         function removeElement(element) {
             if (confirm('Are you sure you want to remove this item?')) {
+               type = element.classList.contains('test-reference-item') ? 'Test Reference' : 'Condition';
+                if (type === 'Test Reference') {
+                    testReferenceCount--;
+                } else {
+                    conditionCount--;
+                }
                 element.remove();
                 updateStats();
             }
@@ -642,7 +665,6 @@
 
         function validateForm() {
             const form = document.getElementById('algorithmForm');
-            const formData = new FormData(form);
             let isValid = true;
             let errors = [];
 
@@ -687,7 +709,7 @@
             try {
                 new URL(string);
                 return true;
-            } catch (_) {
+            } catch (error) {
                 return false;
             }
         }
@@ -716,7 +738,6 @@
         }
 
         function exportToJSON() {
-            const form = document.getElementById('algorithmForm');
             
             // Collect property data
             const propertyData = {
