@@ -1,6 +1,6 @@
-[![SQA badge](https://api.eu.badgr.io/public/assertions/<SQAaaS image ID>/image)](https://api.eu.badgr.io/public/badges/<SQAaaS badge ID>)
-
 # Benchmark Form
+
+[![SQAaaS badge](https://github.com/EOSC-synergy/SQAaaS/raw/master/badges/badges_150x116/badge_software_silver.png)](https://api.eu.badgr.io/public/assertions/CxgEgRBRSsCVraA8pVruEw "SQAaaS silver badge achieved")
 
 This repository contains the source code for generating the contents of a Google Sheets Benchmark Algorithm file
 used in conjunction with the [FAIR Champion Quality Assessment tool](https://tools.ostrails.eu/champion/assess/algorithm).
