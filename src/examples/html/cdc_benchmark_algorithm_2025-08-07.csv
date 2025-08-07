@@ -1,0 +1,47 @@
+Property,Value
+Algorithm Name,"CESSDA CDC benchmark algorithm"
+Benchmark GUID,"https://ostrails.github.io/sandbox/mockbenchmark1.ttl"
+Relevant Community,"http://www.fairsharing.org/ontology/subject/SRAO_0000002"
+Applicable Digital Object Type,"https://schema.org/Dataset"
+
+Test Reference,Test GUID,Pass Weight,Fail Weight,Indeterminate Weight
+"T1","https://tests.ostrails.eu/tests/fc_unique_identifier",5,-1,0
+"T2","https://tests.ostrails.eu/tests/fc_unique_identifier",5,-1,0
+"T3","https://tests.ostrails.eu/tests/fc_structured_metadata",5,-1,0
+"T4","https://tests.ostrails.eu/tests/fc_unique_identifier",5,-1,0
+"T5","https://tests.ostrails.eu/tests/fc_searchable",5,-1,0
+"T6","https://tests.ostrails.eu/tests/fc_metadata_protocol",5,-1,0
+"T7","https://tests.ostrails.eu/tests/fc_data_protocol",5,-1,0
+"T8","https://tests.ostrails.eu/tests/fc_data_authorization",5,-1,0
+"T9","https://tests.ostrails.eu/tests/fc_metadata_identifier_persistence",5,-1,0
+"T10","https://tests.ostrails.eu/tests/fc_data_kr_language_weak",5,-1,0
+"T11","https://tests.ostrails.eu/tests/fc_metadata_uses_fair_vocabularies",5,-1,0
+"T12","https://tests.ostrails.eu/tests/fc_metadata_outward_links",5,-1,0
+"T13","https://tests.ostrails.eu/tests/fc_unique_identifier",5,-1,0
+"T14","https://tests.ostrails.eu/tests/fc_metadata_includes_license_weak",5,-1,0
+"T15","https://tests.ostrails.eu/tests/fc_unique_identifier",5,-1,0
+"T16","https://tests.ostrails.eu/tests/fc_grounded_metadata",5,-1,0
+"T17","https://tests.ostrails.eu/tests/fc_unique_identifier",5,-1,0
+
+Condition,Description,Formula,Success Message,Fail Message
+"C1","Metadata are assigned globally unique identifiers","T1 > 0","Acceptable: metadata are assigned globally unique identifiers","Unacceptable: metadata are not assigned globally unique identifiers"
+"C2","Metadata are assigned persistent identifiers","T2 > 0","Acceptable: metadata are assigned persistent identifiers","Unacceptable: metadata are not assigned persistent identifiers"
+"C3","Data are described with rich metadata","T3 > 0","Acceptable: data are described with rich metadata","Unacceptable: data are not described with rich metadata"
+"C4","Metadata clearly and explicitly include the identifier of the data they describe","T4 > 0","Acceptable: data identifier found","Unacceptable: data identifier not found"
+"C5","Metadata are registered or indexed in a searchable resource","T5 > 0","Acceptable: metadata are searchable","Unacceptable: metadata are not searchable"
+"C6","Metadata are retrievable by their identifier using a standardized communications protocol","T6 > 0","Acceptable: metadata are retreivable via a standardized communications protocol","Unacceptable: metadata are not retreivable via a standardized communications protocol"
+"C7","The protocol is open, free, and universally implementable","T7 > 0","Acceptable: the protocol is open, free, and universally implementable","Unacceptable: the protocol is not open, free, and universally implementable"
+"C8","The protocol allows for an authentication and authorization procedure, where necessary","T8 > 0","Acceptable: the protocol allows for an authentication and authorization procedure, where necessary","Unacceptable: the protocol does not allow for an authentication and authorization procedure, where necessary"
+"C9","Metadata are accessible, even when the data are no longer available","T9 > 0","Acceptable: metadata are accessible, even when the data are no longer available","Unacceptable: metadata are not accessible when the data are no longer available"
+"C10","Metadata use a formal, accessible, shared, and broadly applicable language for knowledge representation","T10 > 0","Acceptable: metadata use a formal, accessible, shared, and broadly applicable language for knowledge representation","Unacceptable: metadata does not use a formal, accessible, shared, and broadly applicable language for knowledge representation"
+"C11","Metadata use vocabularies that follow FAIR principles","T11 > 0","Acceptable: metadata use vocabularies that follow FAIR principles","Unacceptable: metadata use vocabularies that do not follow FAIR principles"
+"C12","Metadata include qualified references to other (meta)data","T12 > 0","Acceptable: metadata include qualified references to other metadata","Unacceptable: metadata do not include qualified references to other metadata"
+"C13","Metadata are richly described with a plurality of accurate and relevant attributes","T13 > 0","Acceptable: data richly described with a plurality of accurate and relevant attributes","Unacceptable: data not richly described with a plurality of accurate and relevant attributes"
+"C14","Metadata are released with a clear and accessible data usage license","T14 > 0","Acceptable: metadata released with a clear and accessible data usage license","Unacceptable: metadata not released with a clear and accessible data usage license"
+"C15","Metadata are associated with detailed provenance","T15 > 0","Acceptable: data associated with detailed provenance","Unacceptable: data not associated with detailed provenance"
+"C16","Metadata meet domain-relevant community standards","T16 > 0","Acceptable: metadata meet domain-relevant community standards","Unacceptable: metadata do not meet domain-relevant community standards"
+"C17","GUID matches a GUID scheme recognised as being globally unique","T17 > 0","Acceptable: GUID matches a scheme recognised as being globally unique","Unacceptable: GUID does not match a scheme recognised as being globally unique"
+"C18","Majority of FINDABLE tests passed","T1 + T2 +T3 +T4 +T5 > 12","Acceptable: Data mostly FINDABLE","Unacceptable: Data mostly not FINDABLE"
+"C19","Majority of ACCESSIBLE tests passed","T6 + T7 +T8 + T9 > 13","Acceptable: Data mostly ACCESSIBLE","Unacceptable: Data mostly not ACCESSIBLE"
+"C20","Majority of INTEROPERABLE tests passed","T10 + T11 + T12 > 13","Acceptable: Data mostly INTEROPERABLE","Unacceptable: Data mostly not INTEROPERABLE"
+"C21","Majority of REUSABLE tests passed","T13 + T14 + T14 + T16 + T17 > 12","Acceptable: Data mostly REUSABLE","Unacceptable: Data mostly not REUSABLE"

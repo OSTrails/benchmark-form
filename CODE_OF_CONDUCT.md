@@ -53,7 +53,7 @@ as an appointed representative at an online or offline event.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behaviour may be
-reported by contacting the CESSDA Main Office at support AT cessda DOT eu.
+reported by contacting the OSTRails Project Office at info AT openaire DOT eu.
 The project team will review and investigate all complaints, and will respond
 in a way that it deems appropriate to the circumstances.
 The project team is obligated to maintain confidentiality with regard to the

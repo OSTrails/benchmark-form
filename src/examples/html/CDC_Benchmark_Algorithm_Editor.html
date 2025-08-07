@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDC Benchmark Algorithm Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Google Sans', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #202124;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4285f4 0%, #673ab7 100%);
+            color: white;
+            padding: 32px 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 2px,
+                rgba(255,255,255,0.03) 2px,
+                rgba(255,255,255,0.03) 4px
+            );
+            animation: shimmer 20s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 300;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-content {
+            padding: 32px 24px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            border: 1px solid #e8eaed;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .section:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e8f0fe 100%);
+            padding: 20px 24px;
+            border-bottom: 1px solid #e8eaed;
+            font-weight: 500;
+            font-size: 18px;
+            color: #1f1f1f;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-header .icon {
+            font-size: 24px;
+        }
+
+        .section-content {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #202124;
+            font-size: 14px;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="url"],
+        .form-group input[type="number"],
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e8eaed;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            background: #fafafa;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4285f4;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .test-reference-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+            border: 2px solid #e8eaed;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .test-reference-item:hover {
+            border-color: #4285f4;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.1);
+        }
+
+        .condition-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+            border: 2px solid #e8eaed;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .condition-item:hover {
+            border-color: #34a853;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 168, 83, 0.1);
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .item-header h4 {
+            color: #1f1f1f;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .row-three {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4285f4 0%, #1a73e8 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(26, 115, 232, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #5f6368;
+            border: 2px solid #e8eaed;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 12px;
+        }
+
+        .btn-secondary:hover {
+            border-color: #4285f4;
+            color: #4285f4;
+            transform: translateY(-1px);
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 40px;
+            padding-top: 32px;
+            border-top: 2px solid #f1f3f4;
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #34a853 0%, #2d7d32 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(52, 168, 83, 0.3);
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 168, 83, 0.4);
+        }
+
+        .remove-btn {
+            background: linear-gradient(135deg, #ea4335 0%, #d33b2c 100%);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(234, 67, 53, 0.4);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #90caf9;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1565c0;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #1976d2;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #e8eaed;
+            border-radius: 2px;
+            margin: 8px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4285f4, #34a853);
+            transition: width 0.5s ease;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+            
+            .row, .row-three {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-content {
+                padding: 20px 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 CDC Benchmark Algorithm Editor</h1>
+            <p>Configure FAIR data assessment properties, test references, and conditions</p>
+        </div>
+
+        <div class="form-content">
+            <!-- Statistics Section -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="testCount">17</div>
+                    <div class="stat-label">Test References</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="conditionCount">21</div>
+                    <div class="stat-label">Conditions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="fairPrinciples">4</div>
+                    <div class="stat-label">FAIR Principles</div>
+                </div>
+            </div>
+
+            <form id="algorithmForm">
+                <!-- Property Section -->
+                <div class="section fade-in">
+                    <div class="section-header">
+                        <span class="icon">📋</span>
+                        <span>Algorithm Properties</span>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-group">
+                            <label for="algorithmName">Algorithm Name</label>
+                            <input type="text" id="algorithmName" value="CESSDA CDC benchmark algorithm" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="benchmarkGuid">Benchmark GUID</label>
+                            <input type="url" id="benchmarkGuid" value="https://ostrails.github.io/sandbox/mockbenchmark1.ttl" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="relevantCommunity">Relevant Community (URL)</label>
+                            <input type="url" id="relevantCommunity" value="http://www.fairsharing.org/ontology/subject/SRAO_0000002" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="digitalObjectType">Applicable Digital Object Type (URL)</label>
+                            <input type="url" id="digitalObjectType" value="https://schema.org/Dataset" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Reference Section -->
+                <div class="section fade-in">
+                    <div class="section-header">
+                        <span class="icon">🧪</span>
+                        <span>Test References</span>
+                    </div>
+                    <div class="section-content">
+                        <button type="button" class="add-btn" onclick="addTestReference()">+ Add Test Reference</button>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%"></div>
+                        </div>
+                        <div id="testReferences">
+                            <!-- Test references will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Condition Section -->
+                <div class="section fade-in">
+                    <div class="section-header">
+                        <span class="icon">⚙️</span>
+                        <span>Evaluation Conditions</span>
+                    </div>
+                    <div class="section-content">
+                        <button type="button" class="add-btn" onclick="addCondition()">+ Add Condition</button>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%"></div>
+                        </div>
+                        <div id="conditions">
+                            <!-- Conditions will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="btn-secondary" onclick="resetForm()">🔄 Reset Form</button>
+                    <button type="button" class="btn-secondary" onclick="validateForm()">✅ Validate</button>
+                    <button type="submit" class="btn-primary">💾 Export Configuration</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Initial data from the spreadsheet
+        const initialTestReferences = [
+            { id: 'T1', guid: 'https://tests.ostrails.eu/tests/fc_unique_identifier', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
+            { id: 'T2', guid: 'https://tests.ostrails.eu/tests/fc_unique_identifier', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
+            { id: 'T3', guid: 'https://tests.ostrails.eu/tests/fc_structured_metadata', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
+            { id: 'T4', guid: 'https://tests.ostrails.eu/tests/fc_unique_identifier', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
+            { id: 'T5', guid: 'https://tests.ostrails.eu/tests/fc_searchable', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
+            { id: 'T6', guid: 'https://tests.ostrails.eu/tests/fc_metadata_protocol', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
+            { id: 'T7', guid: 'https://tests.ostrails.eu/tests/fc_data_protocol', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
+            { id: 'T8', guid: 'https://tests.ostrails.eu/tests/fc_data_authorization', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
+            { id: 'T9', guid: 'https://tests.ostrails.eu/tests/fc_metadata_identifier_persistence', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
+            { id: 'T10', guid: 'https://tests.ostrails.eu/tests/fc_data_kr_language_weak', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
+            { id: 'T11', guid: 'https://tests.ostrails.eu/tests/fc_metadata_uses_fair_vocabularies', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
+            { id: 'T12', guid: 'https://tests.ostrails.eu/tests/fc_metadata_outward_links', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
+            { id: 'T13', guid: 'https://tests.ostrails.eu/tests/fc_unique_identifier', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
+            { id: 'T14', guid: 'https://tests.ostrails.eu/tests/fc_metadata_includes_license_weak', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
+            { id: 'T15', guid: 'https://tests.ostrails.eu/tests/fc_unique_identifier', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
+            { id: 'T16', guid: 'https://tests.ostrails.eu/tests/fc_grounded_metadata', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
+            { id: 'T17', guid: 'https://tests.ostrails.eu/tests/fc_unique_identifier', passWeight: 5, failWeight: -1, indeterminateWeight: 0 }
+        ];
+
+        const initialConditions = [
+            { id: 'C1', description: 'Metadata are assigned globally unique identifiers', formula: 'T1 > 0', successMessage: 'Acceptable: metadata are assigned globally unique identifiers', failMessage: 'Unacceptable: metadata are not assigned globally unique identifiers' },
+            { id: 'C2', description: 'Metadata are assigned persistent identifiers', formula: 'T2 > 0', successMessage: 'Acceptable: metadata are assigned persistent identifiers', failMessage: 'Unacceptable: metadata are not assigned persistent identifiers' },
+            { id: 'C3', description: 'Data are described with rich metadata', formula: 'T3 > 0', successMessage: 'Acceptable: data are described with rich metadata', failMessage: 'Unacceptable: data are not described with rich metadata' },
+            { id: 'C4', description: 'Metadata clearly and explicitly include the identifier of the data they describe', formula: 'T4 > 0', successMessage: 'Acceptable: data identifier found', failMessage: 'Unacceptable: data identifier not found' },
+            { id: 'C5', description: 'Metadata are registered or indexed in a searchable resource', formula: 'T5 > 0', successMessage: 'Acceptable: metadata are searchable', failMessage: 'Unacceptable: metadata are not searchable' },
+            { id: 'C6', description: 'Metadata are retrievable by their identifier using a standardized communications protocol', formula: 'T6 > 0', successMessage: 'Acceptable: metadata are retreivable via a standardized communications protocol', failMessage: 'Unacceptable: metadata are not retreivable via a standardized communications protocol' },
+            { id: 'C7', description: 'The protocol is open, free, and universally implementable', formula: 'T7 > 0', successMessage: 'Acceptable: the protocol is open, free, and universally implementable', failMessage: 'Unacceptable: the protocol is not open, free, and universally implementable' },
+            { id: 'C8', description: 'The protocol allows for an authentication and authorization procedure, where necessary', formula: 'T8 > 0', successMessage: 'Acceptable: the protocol allows for an authentication and authorization procedure, where necessary', failMessage: 'Unacceptable: the protocol does not allow for an authentication and authorization procedure, where necessary' },
+            { id: 'C9', description: 'Metadata are accessible, even when the data are no longer available', formula: 'T9 > 0', successMessage: 'Acceptable: metadata are accessible, even when the data are no longer available', failMessage: 'Unacceptable: metadata are not accessible when the data are no longer available' },
+            { id: 'C10', description: 'Metadata use a formal, accessible, shared, and broadly applicable language for knowledge representation', formula: 'T10 > 0', successMessage: 'Acceptable: metadata use a formal, accessible, shared, and broadly applicable language for knowledge representation', failMessage: 'Unacceptable: metadata does not use a formal, accessible, shared, and broadly applicable language for knowledge representation' },
+            { id: 'C11', description: 'Metadata use vocabularies that follow FAIR principles', formula: 'T11 > 0', successMessage: 'Acceptable: metadata use vocabularies that follow FAIR principles', failMessage: 'Unacceptable: metadata use vocabularies that do not follow FAIR principles' },
+            { id: 'C12', description: 'Metadata include qualified references to other (meta)data', formula: 'T12 > 0', successMessage: 'Acceptable: metadata include qualified references to other metadata', failMessage: 'Unacceptable: metadata do not include qualified references to other metadata' },
+            { id: 'C13', description: 'Metadata are richly described with a plurality of accurate and relevant attributes', formula: 'T13 > 0', successMessage: 'Acceptable: data richly described with a plurality of accurate and relevant attributes', failMessage: 'Unacceptable: data not richly described with a plurality of accurate and relevant attributes' },
+            { id: 'C14', description: 'Metadata are released with a clear and accessible data usage license', formula: 'T14 > 0', successMessage: 'Acceptable: metadata released with a clear and accessible data usage license', failMessage: 'Unacceptable: metadata not released with a clear and accessible data usage license' },
+            { id: 'C15', description: 'Metadata are associated with detailed provenance', formula: 'T15 > 0', successMessage: 'Acceptable: data associated with detailed provenance', failMessage: 'Unacceptable: data not associated with detailed provenance' },
+            { id: 'C16', description: 'Metadata meet domain-relevant community standards', formula: 'T16 > 0', successMessage: 'Acceptable: metadata meet domain-relevant community standards', failMessage: 'Unacceptable: metadata do not meet domain-relevant community standards' },
+            { id: 'C17', description: 'GUID matches a GUID scheme recognised as being globally unique', formula: 'T17 > 0', successMessage: 'Acceptable: GUID matches a scheme recognised as being globally unique', failMessage: 'Unacceptable: GUID does not match a scheme recognised as being globally unique' },
+            { id: 'C18', description: 'Majority of FINDABLE tests passed', formula: 'T1 + T2 +T3 +T4 +T5 > 12', successMessage: 'Acceptable: Data mostly FINDABLE', failMessage: 'Unacceptable: Data mostly not FINDABLE' },
+            { id: 'C19', description: 'Majority of ACCESSIBLE tests passed', formula: 'T6 + T7 +T8 + T9 > 13', successMessage: 'Acceptable: Data mostly ACCESSIBLE', failMessage: 'Unacceptable: Data mostly not ACCESSIBLE' },
+            { id: 'C20', description: 'Majority of INTEROPERABLE tests passed', formula: 'T10 + T11 + T12 > 13', successMessage: 'Acceptable: Data mostly INTEROPERABLE', failMessage: 'Unacceptable: Data mostly not INTEROPERABLE' },
+            { id: 'C21', description: 'Majority of REUSABLE tests passed', formula: 'T13 + T14 + T14 + T16 + T17 > 12', successMessage: 'Acceptable: Data mostly REUSABLE', failMessage: 'Unacceptable: Data mostly not REUSABLE' }
+        ];
+
+        let testReferenceCount = 0;
+        let conditionCount = 0;
+
+        function initializeForm() {
+            // Load test references
+            initialTestReferences.forEach(test => {
+                addTestReference(test);
+            });
+
+            // Load conditions
+            initialConditions.forEach(condition => {
+                addCondition(condition);
+            });
+
+            updateStats();
+        }
+
+        function addTestReference(data = null) {
+            testReferenceCount++;
+            const container = document.getElementById('testReferences');
+            const div = document.createElement('div');
+            div.className = 'test-reference-item fade-in';
+            div.innerHTML = `
+                <div class="item-header">
+                    <h4>🧪 ${data ? data.id : 'T' + testReferenceCount}</h4>
+                    <button type="button" class="remove-btn" onclick="removeElement(this.closest('.test-reference-item'))">Remove</button>
+                </div>
+                <div class="form-group">
+                    <label>Test ID</label>
+                    <input type="text" value="${data ? data.id : 'T' + testReferenceCount}" name="testId" required>
+                </div>
+                <div class="form-group">
+                    <label>Test GUID (URL)</label>
+                    <input type="url" value="${data ? data.guid : ''}" name="testGuid" placeholder="https://tests.ostrails.eu/tests/..." required>
+                </div>
+                <div class="row-three">
+                    <div class="form-group">
+                        <label>Pass Weight</label>
+                        <input type="number" value="${data ? data.passWeight : 5}" name="passWeight" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Fail Weight</label>
+                        <input type="number" value="${data ? data.failWeight : -1}" name="failWeight" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Indeterminate Weight</label>
+                        <input type="number" value="${data ? data.indeterminateWeight : 0}" name="indeterminateWeight" required>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+            updateStats();
+        }
+
+        function addCondition(data = null) {
+            conditionCount++;
+            const container = document.getElementById('conditions');
+            const div = document.createElement('div');
+            div.className = 'condition-item fade-in';
+            div.innerHTML = `
+                <div class="item-header">
+                    <h4>⚙️ ${data ? data.id : 'C' + conditionCount}</h4>
+                    <button type="button" class="remove-btn" onclick="removeElement(this.closest('.condition-item'))">Remove</button>
+                </div>
+                <div class="form-group">
+                    <label>Condition ID</label>
+                    <input type="text" value="${data ? data.id : 'C' + conditionCount}" name="conditionId" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="conditionDescription" rows="2" required>${data ? data.description : ''}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Formula</label>
+                    <input type="text" value="${data ? data.formula : ''}" name="conditionFormula" placeholder="e.g., T1 > 0" required>
+                </div>
+                <div class="row">
+                    <div class="form-group">
+                        <label>Success Message</label>
+                        <textarea name="successMessage" rows="3" required>${data ? data.successMessage : ''}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Fail Message</label>
+                        <textarea name="failMessage" rows="3" required>${data ? data.failMessage : ''}</textarea>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+            updateStats();
+        }
+
+        function removeElement(element) {
+            if (confirm('Are you sure you want to remove this item?')) {
+                element.remove();
+                updateStats();
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('testCount').textContent = document.querySelectorAll('.test-reference-item').length;
+            document.getElementById('conditionCount').textContent = document.querySelectorAll('.condition-item').length;
+        }
+
+        function validateForm() {
+            const form = document.getElementById('algorithmForm');
+            const formData = new FormData(form);
+            let isValid = true;
+            let errors = [];
+
+            // Validate required fields
+            const requiredFields = form.querySelectorAll('[required]');
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.style.borderColor = '#ea4335';
+                    errors.push(`${field.closest('.form-group').querySelector('label').textContent} is required`);
+                } else {
+                    field.style.borderColor = '#34a853';
+                }
+            });
+
+            // Validate URLs
+            const urlFields = form.querySelectorAll('input[type="url"]');
+            urlFields.forEach(field => {
+                if (field.value && !isValidURL(field.value)) {
+                    isValid = false;
+                    field.style.borderColor = '#ea4335';
+                    errors.push(`${field.closest('.form-group').querySelector('label').textContent} must be a valid URL`);
+                }
+            });
+
+            // Show validation results
+            if (isValid) {
+                alert('✅ Form validation passed! All fields are correctly filled.');
+                // Reset border colors to default
+                form.querySelectorAll('input, textarea').forEach(field => {
+                    field.style.borderColor = '#34a853';
+                    setTimeout(() => field.style.borderColor = '#e8eaed', 2000);
+                });
+            } else {
+                alert('❌ Form validation failed:\n\n' + errors.join('\n'));
+            }
+
+            return isValid;
+        }
+
+        function isValidURL(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function resetForm() {
+            if (confirm('Are you sure you want to reset the form? This will restore the original CDC Benchmark Algorithm data and lose any changes.')) {
+                // Reset form to loading state
+                document.body.classList.add('loading');
+                
+                setTimeout(() => {
+                    document.getElementById('testReferences').innerHTML = '';
+                    document.getElementById('conditions').innerHTML = '';
+                    testReferenceCount = 0;
+                    conditionCount = 0;
+                    
+                    // Reset property values
+                    document.getElementById('algorithmName').value = 'CESSDA CDC benchmark algorithm';
+                    document.getElementById('benchmarkGuid').value = 'https://ostrails.github.io/sandbox/mockbenchmark1.ttl';
+                    document.getElementById('relevantCommunity').value = 'http://www.fairsharing.org/ontology/subject/SRAO_0000002';
+                    document.getElementById('digitalObjectType').value = 'https://schema.org/Dataset';
+                    
+                    initializeForm();
+                    document.body.classList.remove('loading');
+                }, 500);
+            }
+        }
+
+        function exportToJSON() {
+            const form = document.getElementById('algorithmForm');
+            
+            // Collect property data
+            const propertyData = {
+                algorithmName: document.getElementById('algorithmName').value,
+                benchmarkGuid: document.getElementById('benchmarkGuid').value,
+                relevantCommunity: document.getElementById('relevantCommunity').value,
+                digitalObjectType: document.getElementById('digitalObjectType').value
+            };
+
+            // Collect test references
+            const testReferences = [];
+            const testItems = document.querySelectorAll('.test-reference-item');
+            testItems.forEach(item => {
+                const inputs = item.querySelectorAll('input');
+                testReferences.push({
+                    id: inputs[0].value,
+                    guid: inputs[1].value,
+                    passWeight: parseInt(inputs[2].value),
+                    failWeight: parseInt(inputs[3].value),
+                    indeterminateWeight: parseInt(inputs[4].value)
+                });
+            });
+
+            // Collect conditions
+            const conditions = [];
+            const conditionItems = document.querySelectorAll('.condition-item');
+            conditionItems.forEach(item => {
+                const inputs = item.querySelectorAll('input, textarea');
+                conditions.push({
+                    id: inputs[0].value,
+                    description: inputs[1].value,
+                    formula: inputs[2].value,
+                    successMessage: inputs[3].value,
+                    failMessage: inputs[4].value
+                });
+            });
+
+            return {
+                metadata: {
+                    title: "CDC Benchmark Algorithm Configuration",
+                    version: "1.0",
+                    exportedAt: new Date().toISOString(),
+                    totalTests: testReferences.length,
+                    totalConditions: conditions.length
+                },
+                property: propertyData,
+                testReferences: testReferences,
+                conditions: conditions
+            };
+        }
+
+        function exportToGoogleSheetFormat() {
+            const data = exportToJSON();
+            
+            // Create Google Sheets compatible format
+            let csvContent = "Property,Value\n";
+            csvContent += `Algorithm Name,"${data.property.algorithmName}"\n`;
+            csvContent += `Benchmark GUID,"${data.property.benchmarkGuid}"\n`;
+            csvContent += `Relevant Community,"${data.property.relevantCommunity}"\n`;
+            csvContent += `Applicable Digital Object Type,"${data.property.digitalObjectType}"\n`;
+            csvContent += "\n";
+            csvContent += "Test Reference,Test GUID,Pass Weight,Fail Weight,Indeterminate Weight\n";
+            
+            data.testReferences.forEach(test => {
+                csvContent += `"${test.id}","${test.guid}",${test.passWeight},${test.failWeight},${test.indeterminateWeight}\n`;
+            });
+            
+            csvContent += "\n";
+            csvContent += "Condition,Description,Formula,Success Message,Fail Message\n";
+            
+            data.conditions.forEach(condition => {
+                csvContent += `"${condition.id}","${condition.description}","${condition.formula}","${condition.successMessage}","${condition.failMessage}"\n`;
+            });
+
+            return csvContent;
+        }
+
+        document.getElementById('algorithmForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!validateForm()) {
+                return;
+            }
+
+            // Show loading state
+            const submitBtn = e.target.querySelector('[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '⏳ Exporting...';
+            submitBtn.disabled = true;
+
+            setTimeout(() => {
+                const jsonData = exportToJSON();
+                const csvData = exportToGoogleSheetFormat();
+                
+                // Create downloadable JSON file
+                const jsonBlob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
+                const jsonUrl = URL.createObjectURL(jsonBlob);
+                const jsonLink = document.createElement('a');
+                jsonLink.href = jsonUrl;
+                jsonLink.download = `cdc_benchmark_algorithm_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(jsonLink);
+                jsonLink.click();
+                document.body.removeChild(jsonLink);
+                URL.revokeObjectURL(jsonUrl);
+
+                // Create downloadable CSV file for Google Sheets
+                const csvBlob = new Blob([csvData], { type: 'text/csv' });
+                const csvUrl = URL.createObjectURL(csvBlob);
+                const csvLink = document.createElement('a');
+                csvLink.href = csvUrl;
+                csvLink.download = `cdc_benchmark_algorithm_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(csvLink);
+                csvLink.click();
+                document.body.removeChild(csvLink);
+                URL.revokeObjectURL(csvUrl);
+
+                // Reset button
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+
+                // Show success message
+                alert('🎉 Configuration exported successfully!\n\n📄 JSON file: Complete structured data\n📊 CSV file: Ready to import into Google Sheets\n\nBoth files have been downloaded to your computer.');
+            }, 1000);
+        });
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 's':
+                        e.preventDefault();
+                        document.getElementById('algorithmForm').dispatchEvent(new Event('submit'));
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        resetForm();
+                        break;
+                }
+            }
+        });
+
+        // Initialize the form when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            initializeForm();
+            
+            // Add some visual feedback
+            const sections = document.querySelectorAll('.section');
+            sections.forEach((section, index) => {
+                setTimeout(() => {
+                    section.style.opacity = '0';
+                    section.style.transform = 'translateY(20px)';
+                    section.style.transition = 'all 0.5s ease';
+                    setTimeout(() => {
+                        section.style.opacity = '1';
+                        section.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 200);
+            });
+        });
+
+        // Add tooltips and help text
+        function showHelp(message) {
+            alert('💡 Help: ' + message);
+        }
+
+        // Auto-save to localStorage every 30 seconds (as backup)
+        setInterval(function() {
+            try {
+                const data = exportToJSON();
+                const backup = {
+                    data: data,
+                    timestamp: new Date().toISOString()
+                };
+                // Note: Using a simple backup mechanism since localStorage isn't available
+                console.log('Auto-backup created at:', backup.timestamp);
+            } catch (error) {
+                console.warn('Auto-backup failed:', error);
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

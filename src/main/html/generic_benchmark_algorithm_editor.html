@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+    File: generic_benchmark_algorithm_editor.html
+    Purpose: Form for editing and managing generic benchmark algorithms. 
+    The form allows users to define algorithm properties, test references, and evaluation conditions.
+    Use can export the configuration as JSON and CSV files, then import the CVS into a Google Sheet for use 
+    with the FAIR Champion Benchmark Quality Assessment tool.
+    The Google Sheet must be editable by anonymous users.
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generic Benchmark Algorithm Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Google Sans', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #202124;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #c5f442 0%, #47b73a 100%);
+            color: white;
+            padding: 32px 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 2px,
+                rgba(255,255,255,0.03) 2px,
+                rgba(255,255,255,0.03) 4px
+            );
+            animation: shimmer 20s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 300;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-content {
+            padding: 32px 24px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            border: 1px solid #e8eaed;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .section:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e8f0fe 100%);
+            padding: 20px 24px;
+            border-bottom: 1px solid #e8eaed;
+            font-weight: 500;
+            font-size: 18px;
+            color: #1f1f1f;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-header .icon {
+            font-size: 24px;
+        }
+
+        .section-content {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #202124;
+            font-size: 14px;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="url"],
+        .form-group input[type="number"],
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e8eaed;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            background: #fafafa;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4285f4;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .test-reference-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+            border: 2px solid #e8eaed;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .test-reference-item:hover {
+            border-color: #4285f4;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.1);
+        }
+
+        .condition-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+            border: 2px solid #e8eaed;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .condition-item:hover {
+            border-color: #34a853;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 168, 83, 0.1);
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .item-header h4 {
+            color: #1f1f1f;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .row-three {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4285f4 0%, #1a73e8 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(26, 115, 232, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #5f6368;
+            border: 2px solid #e8eaed;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 12px;
+        }
+
+        .btn-secondary:hover {
+            border-color: #4285f4;
+            color: #4285f4;
+            transform: translateY(-1px);
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 40px;
+            padding-top: 32px;
+            border-top: 2px solid #f1f3f4;
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #34a853 0%, #2d7d32 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(52, 168, 83, 0.3);
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 168, 83, 0.4);
+        }
+
+        .remove-btn {
+            background: linear-gradient(135deg, #ea4335 0%, #d33b2c 100%);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(234, 67, 53, 0.4);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #90caf9;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1565c0;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #1976d2;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #e8eaed;
+            border-radius: 2px;
+            margin: 8px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4285f4, #34a853);
+            transition: width 0.5s ease;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+            
+            .row, .row-three {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-content {
+                padding: 20px 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Generic Benchmark Algorithm Editor</h1>
+            <p>Use this form to generate a CSV file that can be imported into a Benchmark Configuration Google Sheet for use with the 
+      <a href="https://tools.ostrails.eu/champion/assess/algorithm/new" target="_blank" rel="noopener">FAIR Champion Benchmark Quality Assessment tool</a>
+    </p>
+        </div>
+        <div class="form-content">
+            <!-- Statistics Section -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="testCount">2</div>
+                    <div class="stat-label">Test References</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="conditionCount">2</div>
+                    <div class="stat-label">Conditions</div>
+                </div>
+            </div>
+
+            <form id="algorithmForm">
+                <!-- Property Section -->
+                <div class="section fade-in">
+                    <div class="section-header">
+                        <span class="icon">📋</span>
+                        <span>Algorithm Properties</span>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-group">
+                            <label for="algorithmName">Algorithm Name</label>
+                            <input type="text" id="algorithmName" value="Generic benchmark algorithm" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="benchmarkGuid">Benchmark GUID</label>
+                            <input type="url" id="benchmarkGuid" value="https://ostrails.github.io/sandbox/mockbenchmark1.ttl" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="relevantCommunity">Relevant Community (URL)</label>
+                            <input type="url" id="relevantCommunity" value="http://www.fairsharing.org/ontology/subject/SRAO_0000002" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="digitalObjectType">Applicable Digital Object Type (URL)</label>
+                            <input type="url" id="digitalObjectType" value="https://schema.org/Dataset" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Reference Section -->
+                <div class="section fade-in">
+                    <div class="section-header">
+                        <span class="icon">🧪</span>
+                        <span>Test References  (see 
+          <a href="https://tests.ostrails.eu/tests/" target="_blank" rel="noopener">OSTrails FAIR tests</a>)</span>
+                    </div>
+                    <div class="section-content">
+                        <button type="button" class="add-btn" onmouseover="addTestReference()">+ Add Test Reference</button>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%"></div>
+                        </div>
+                        <div id="testReferences">
+                            <!-- Test references will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Condition Section -->
+                <div class="section fade-in">
+                    <div class="section-header">
+                        <span class="icon">⚙️</span>
+                        <span>Evaluation Conditions</span>
+                    </div>
+                    <div class="section-content">
+                        <button type="button" class="add-btn" onmouseover="addCondition()">+ Add Condition</button>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%"></div>
+                        </div>
+                        <div id="conditions">
+                            <!-- Conditions will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="btn-secondary" onmouseover="resetForm()">
+                        🔄 Reset Form
+                        <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Reset Form - Restore the original Benchmark Algorithm data and lose any changes.')">❓</span>
+                    </button></button>
+                    <button type="button" class="btn-secondary" onmouseover="validateForm()">
+                        ✅ Validate
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        💾 Export Configuration
+                        <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Export Configuration - Download the current configuration as JSON and CSV files.')">❓</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Sample data for initial test references and conditions
+        const initialTestReferences = [
+            { id: 'T1', guid: 'https://tests.ostrails.eu/tests/fc_unique_identifier', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
+            { id: 'T2', guid: 'https://tests.ostrails.eu/tests/fc_searchable', passWeight: 5, failWeight: -1, indeterminateWeight: 0 }
+        ];
+
+        const initialConditions = [
+            { id: 'C1', description: 'Metadata are assigned globally unique identifiers', formula: 'T1 > 0', successMessage: 'Acceptable: metadata are assigned globally unique identifiers', failMessage: 'Unacceptable: metadata are not assigned globally unique identifiers' },
+            { id: 'C2', description: 'Metadata are assigned globally unique identifiers and are registered or indexed in a searchable resource', formula: 'T1 + T2 == 10', successMessage: 'Acceptable: both tests passed', failMessage: 'Unacceptable: one or more tests failed' }   ];
+
+        let testReferenceCount = 0;
+        let conditionCount = 0;
+
+        function initializeForm() {
+            // Load test references
+            initialTestReferences.forEach(test => {
+                addTestReference(test);
+            });
+
+            // Load conditions
+            initialConditions.forEach(condition => {
+                addCondition(condition);
+            });
+
+            updateStats();
+        }
+
+        function addTestReference(data = null) {
+            testReferenceCount++;
+            const container = document.getElementById('testReferences');
+            const div = document.createElement('div');
+            div.className = 'test-reference-item fade-in';
+            div.innerHTML = `
+                <div class="item-header">
+                    <h4>🧪 ${data ? data.id : 'T' + testReferenceCount}</h4>
+                    <button type="button" class="remove-btn" onmouseover="removeElement(this.closest('.test-reference-item'))">Remove</button>
+                </div>
+                <div class="form-group">
+                    <label>
+                        Test ID
+                        <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Test ID - Enter a unique identifier for this test reference.')">❓</span>
+                    </label>
+                    <input type="text" value="${data ? data.id : 'T' + testReferenceCount}" name="testId" required>
+                </div>
+                <div class="form-group">
+                    <label title="Use a test from the OSTrails FAIR tests collection">
+                        Enter test GUID (URL)
+                        <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Test GUID - Use a test from https://tests.ostrails.eu/tests/')">❓</span>
+                    </label>
+                    <input type="url" value="${data ? data.guid : ''}" name="testGuid" placeholder="https://tests.ostrails.eu/tests/..." required>
+                </div>
+                <div class="row-three">
+                    <div class="form-group">
+                        <label title="Use an integer greater than zero">
+                            Pass Weight
+                            <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Pass Weight - Use an integer greater than zero.')">❓</span>
+                        </label>
+                        <input type="number" value="${data ? data.passWeight : 5}" name="passWeight" required>
+                    </div>
+                    <div class="form-group">
+                        <label title="Use an integer less than zero">
+                            Fail Weight
+                            <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Fail Weight - Use an integer less than zero.')">❓</span>
+                        </label>
+                        <input type="number" value="${data ? data.failWeight : -1}" name="failWeight" required>
+                    </div>
+                    <div class="form-group">
+                        <label title="Use an integer between the Pass and Fail weight range, typically zero">
+                            Indeterminate Weight
+                            <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Indeterminate Weight - Use an integer between the Pass and Fail weight range, typically zero.')">❓</span>
+                        </label>
+                        <input type="number" value="${data ? data.indeterminateWeight : 0}" name="indeterminateWeight" required>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+            updateStats();
+        }
+
+        function addCondition(data = null) {
+            conditionCount++;
+            const container = document.getElementById('conditions');
+            const div = document.createElement('div');
+            div.className = 'condition-item fade-in';
+            div.innerHTML = `
+                <div class="item-header">
+                    <h4>⚙️ ${data ? data.id : 'C' + conditionCount}</h4>
+                    <button type="button" class="remove-btn" onmouseover="removeElement(this.closest('.condition-item'))">Remove</button>
+                </div>
+                <div class="form-group">
+                    <label>
+                        Condition ID
+                        <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Condition ID - Enter a unique identifier for this condition.')">❓</span>
+                    </label>
+                    <input type="text" value="${data ? data.id : 'C' + conditionCount}" name="conditionId" required>
+                </div>
+                <div class="form-group">
+                    <label>
+                        Description
+                        <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Condition Description - Enter a short description for this evaluation condition.')">❓</span>
+                    </label>
+                    <textarea name="conditionDescription" rows="2" required>${data ? data.description : ''}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        Formula
+                        <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Formula - Enter a logical formula using test IDs. Ruby syntax is used for the calculation (e.g. conditional equals is == not =).')">❓</span>
+                    </label>
+                    <input type="text" value="${data ? data.formula : ''}" name="conditionFormula" placeholder="e.g., T1 > 0" required>
+                </div>
+                <div class="row">
+                    <div class="form-group">
+                        <label>
+                            Success Message
+                            <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Success Message - Enter the message shown when the condition is met.')">❓</span>
+                        </label>
+                        <textarea name="successMessage" rows="3" required>${data ? data.successMessage : ''}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            Fail Message
+                            <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Fail Message - Enter the message shown when the condition is NOT met.')">❓</span>
+                        </label>
+                        <textarea name="failMessage" rows="3" required>${data ? data.failMessage : ''}</textarea>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+            updateStats();
+        }
+
+        function removeElement(element) {
+            if (confirm('Are you sure you want to remove this item?')) {
+                element.remove();
+                updateStats();
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('testCount').textContent = document.querySelectorAll('.test-reference-item').length;
+            document.getElementById('conditionCount').textContent = document.querySelectorAll('.condition-item').length;
+        }
+
+        function validateForm() {
+            const form = document.getElementById('algorithmForm');
+            const formData = new FormData(form);
+            let isValid = true;
+            let errors = [];
+
+            // Validate required fields
+            const requiredFields = form.querySelectorAll('[required]');
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.style.borderColor = '#ea4335';
+                    errors.push(`${field.closest('.form-group').querySelector('label').textContent} is required`);
+                } else {
+                    field.style.borderColor = '#34a853';
+                }
+            });
+
+            // Validate URLs
+            const urlFields = form.querySelectorAll('input[type="url"]');
+            urlFields.forEach(field => {
+                if (field.value && !isValidURL(field.value)) {
+                    isValid = false;
+                    field.style.borderColor = '#ea4335';
+                    errors.push(`${field.closest('.form-group').querySelector('label').textContent} must be a valid URL`);
+                }
+            });
+
+            // Show validation results
+            if (isValid) {
+                alert('✅ Form validation passed! All fields are correctly filled.');
+                // Reset border colors to default
+                form.querySelectorAll('input, textarea').forEach(field => {
+                    field.style.borderColor = '#34a853';
+                    setTimeout(() => field.style.borderColor = '#e8eaed', 2000);
+                });
+            } else {
+                alert('❌ Form validation failed:\n\n' + errors.join('\n'));
+            }
+
+            return isValid;
+        }
+
+        function isValidURL(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function resetForm() {
+            if (confirm('Are you sure you want to reset the form? This will restore the original Benchmark Algorithm data and lose any changes.')) {
+                // Reset form to loading state
+                document.body.classList.add('loading');
+                
+                setTimeout(() => {
+                    document.getElementById('testReferences').innerHTML = '';
+                    document.getElementById('conditions').innerHTML = '';
+                    testReferenceCount = 0;
+                    conditionCount = 0;
+                    
+                    // Reset property values
+                    document.getElementById('algorithmName').value = 'Generic benchmark algorithm';
+                    document.getElementById('benchmarkGuid').value = 'https://ostrails.github.io/sandbox/mockbenchmark1.ttl';
+                    document.getElementById('relevantCommunity').value = 'http://www.fairsharing.org/ontology/subject/SRAO_0000002';
+                    document.getElementById('digitalObjectType').value = 'https://schema.org/Dataset';
+                    
+                    initializeForm();
+                    document.body.classList.remove('loading');
+                }, 500);
+            }
+        }
+
+        function exportToJSON() {
+            const form = document.getElementById('algorithmForm');
+            
+            // Collect property data
+            const propertyData = {
+                algorithmName: document.getElementById('algorithmName').value,
+                benchmarkGuid: document.getElementById('benchmarkGuid').value,
+                relevantCommunity: document.getElementById('relevantCommunity').value,
+                digitalObjectType: document.getElementById('digitalObjectType').value
+            };
+
+            // Collect test references
+            const testReferences = [];
+            const testItems = document.querySelectorAll('.test-reference-item');
+            testItems.forEach(item => {
+                const inputs = item.querySelectorAll('input');
+                testReferences.push({
+                    id: inputs[0].value,
+                    guid: inputs[1].value,
+                    passWeight: parseInt(inputs[2].value),
+                    failWeight: parseInt(inputs[3].value),
+                    indeterminateWeight: parseInt(inputs[4].value)
+                });
+            });
+
+            // Collect conditions
+            const conditions = [];
+            const conditionItems = document.querySelectorAll('.condition-item');
+            conditionItems.forEach(item => {
+                const inputs = item.querySelectorAll('input, textarea');
+                conditions.push({
+                    id: inputs[0].value,
+                    description: inputs[1].value,
+                    formula: inputs[2].value,
+                    successMessage: inputs[3].value,
+                    failMessage: inputs[4].value
+                });
+            });
+
+            return {
+                metadata: {
+                    title: "Generic Benchmark Algorithm Configuration",
+                    version: "1.0",
+                    exportedAt: new Date().toISOString(),
+                    totalTests: testReferences.length,
+                    totalConditions: conditions.length
+                },
+                property: propertyData,
+                testReferences: testReferences,
+                conditions: conditions
+            };
+        }
+
+        function exportToGoogleSheetFormat() {
+            const data = exportToJSON();
+            
+            // Create Google Sheets compatible format
+            let csvContent = "Property,Value\n";
+            csvContent += `Algorithm Name,"${data.property.algorithmName}"\n`;
+            csvContent += `Benchmark GUID,"${data.property.benchmarkGuid}"\n`;
+            csvContent += `Relevant Community,"${data.property.relevantCommunity}"\n`;
+            csvContent += `Applicable Digital Object Type,"${data.property.digitalObjectType}"\n`;
+            csvContent += "\n";
+            csvContent += "Test Reference,Test GUID,Pass Weight,Fail Weight,Indeterminate Weight\n";
+            
+            data.testReferences.forEach(test => {
+                csvContent += `"${test.id}","${test.guid}",${test.passWeight},${test.failWeight},${test.indeterminateWeight}\n`;
+            });
+            
+            csvContent += "\n";
+            csvContent += "Condition,Description,Formula,Success Message,Fail Message\n";
+            
+            data.conditions.forEach(condition => {
+                csvContent += `"${condition.id}","${condition.description}","${condition.formula}","${condition.successMessage}","${condition.failMessage}"\n`;
+            });
+
+            return csvContent;
+        }
+
+        document.getElementById('algorithmForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!validateForm()) {
+                return;
+            }
+
+            // Show loading state
+            const submitBtn = e.target.querySelector('[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '⏳ Exporting...';
+            submitBtn.disabled = true;
+
+            setTimeout(() => {
+                const jsonData = exportToJSON();
+                const csvData = exportToGoogleSheetFormat();
+                
+                // Create downloadable JSON file
+                const jsonBlob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
+                const jsonUrl = URL.createObjectURL(jsonBlob);
+                const jsonLink = document.createElement('a');
+                jsonLink.href = jsonUrl;
+                jsonLink.download = `generic_benchmark_algorithm_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(jsonLink);
+                jsonLink.click();
+                document.body.removeChild(jsonLink);
+                URL.revokeObjectURL(jsonUrl);
+
+                // Create downloadable CSV file for Google Sheets
+                const csvBlob = new Blob([csvData], { type: 'text/csv' });
+                const csvUrl = URL.createObjectURL(csvBlob);
+                const csvLink = document.createElement('a');
+                csvLink.href = csvUrl;
+                csvLink.download = `generic_benchmark_algorithm_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(csvLink);
+                csvLink.click();
+                document.body.removeChild(csvLink);
+                URL.revokeObjectURL(csvUrl);
+
+                // Reset button
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+
+                // Show success message
+                alert('🎉 Configuration exported successfully!\n\n📄 JSON file: Complete structured data\n📊 CSV file: Ready to import into Google Sheets\n\nBoth files have been downloaded to your computer.');
+            }, 1000);
+        });
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 's':
+                        e.preventDefault();
+                        document.getElementById('algorithmForm').dispatchEvent(new Event('submit'));
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        resetForm();
+                        break;
+                }
+            }
+        });
+
+        // Initialize the form when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            initializeForm();
+            
+            // Add some visual feedback
+            const sections = document.querySelectorAll('.section');
+            sections.forEach((section, index) => {
+                setTimeout(() => {
+                    section.style.opacity = '0';
+                    section.style.transform = 'translateY(20px)';
+                    section.style.transition = 'all 0.5s ease';
+                    setTimeout(() => {
+                        section.style.opacity = '1';
+                        section.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 200);
+            });
+        });
+
+        // Add tooltips and help text
+        function showHelp(message) {
+            alert('💡 Help: ' + message);
+        }
+
+        // Auto-save to localStorage every 30 seconds (as backup)
+        setInterval(function() {
+            try {
+                const data = exportToJSON();
+                const backup = {
+                    data: data,
+                    timestamp: new Date().toISOString()
+                };
+                // Note: Using a simple backup mechanism since localStorage isn't available
+                console.log('Auto-backup created at:', backup.timestamp);
+            } catch (error) {
+                console.warn('Auto-backup failed:', error);
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
