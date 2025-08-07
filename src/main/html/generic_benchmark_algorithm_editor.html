@@ -434,7 +434,7 @@
           <a href="https://tests.ostrails.eu/tests/" target="_blank" rel="noopener">OSTrails FAIR tests</a>)</span>
                     </div>
                     <div class="section-content">
-                        <button type="button" class="add-btn" onmouseover="addTestReference()">+ Add Test Reference</button>
+                        <button type="button" class="add-btn" onmouseover="addTestReference()" onfocus="addTestReference()">+ Add Test Reference</button>
                         <div class="progress-bar">
                             <div class="progress-fill" style="width: 100%"></div>
                         </div>
@@ -451,7 +451,7 @@
                         <span>Evaluation Conditions</span>
                     </div>
                     <div class="section-content">
-                        <button type="button" class="add-btn" onmouseover="addCondition()">+ Add Condition</button>
+                        <button type="button" class="add-btn" onmouseover="addCondition()" onfocus="addCondition()">+ Add Condition</button>
                         <div class="progress-bar">
                             <div class="progress-fill" style="width: 100%"></div>
                         </div>
@@ -462,16 +462,34 @@
                 </div>
 
                 <div class="button-group">
-                    <button type="button" class="btn-secondary" onmouseover="resetForm()">
+                    <button type="button" class="btn-secondary" onmouseover="resetForm()" onfocus="resetForm()">
                         🔄 Reset Form
-                        <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Reset Form - Restore the original Benchmark Algorithm data and lose any changes.')">❓</span>
+                        <button
+                            type="button"
+                            class="icon"
+                            style="cursor:help; background:none; border:none; padding:0; font:inherit;"
+                            title="Hover for help"
+                            tabindex="0"
+                            onmouseover="showHelp('Reset Form - Restore the original Benchmark Algorithm data and lose any changes.')"
+                            onfocus="showHelp('Reset Form - Restore the original Benchmark Algorithm data and lose any changes.')"
+                            onclick="showHelp('Reset Form - Restore the original Benchmark Algorithm data and lose any changes.')"
+                        >❓</button>
                     </button></button>
-                    <button type="button" class="btn-secondary" onmouseover="validateForm()">
+                    <button type="button" class="btn-secondary" onmouseover="validateForm()" onfocus="validateForm()">
                         ✅ Validate
                     </button>
                     <button type="submit" class="btn-primary">
                         💾 Export Configuration
-                        <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Export Configuration - Download the current configuration as JSON and CSV files.')">❓</span>
+                        <button
+                            type="button"
+                            class="icon"
+                            style="cursor:help; background:none; border:none; padding:0; font:inherit;"
+                            title="Hover for help"
+                            tabindex="0"
+                            onmouseover="showHelp('Export Configuration - Download the current configuration as JSON and CSV files.')"
+                            onfocus="showHelp('Export Configuration - Download the current configuration as JSON and CSV files.')"
+                            onclick="showHelp('Export Configuration - Download the current configuration as JSON and CSV files.')"
+                        >❓</button>
                     </button>
                 </div>
             </form>
