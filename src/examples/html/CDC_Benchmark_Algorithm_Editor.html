@@ -7,6 +7,14 @@
     Use can export the configuration as JSON and CSV files, then import the CVS into a Google Sheet for use 
     with the FAIR Champion Benchmark Quality Assessment tool.
     The Google Sheet must be editable by anonymous users.
+
+    REFACTORED: Reduced code duplication by extracting common functions and patterns
+
+    TODO: Review the use of the 'xxxCount--' code in the removeElement function.
+    This code decrements the count of test references and conditions when an item is removed.
+    It works as expected if the highest ID is removed, but may cause issues with duplicate IDs
+    if a lower ID is removed first.
+    Consider removing this code to simplify the logic and avoid potential issues with duplicate IDs.
 -->
 <head>
     <meta charset="UTF-8">
@@ -158,7 +166,7 @@
             min-height: 80px;
         }
 
-        .test-reference-item {
+        .item {
             background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
             border: 2px solid #e8eaed;
             border-radius: 12px;
@@ -172,16 +180,6 @@
             border-color: #4285f4;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(66, 133, 244, 0.1);
-        }
-
-        .condition-item {
-            background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
-            border: 2px solid #e8eaed;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            position: relative;
-            transition: all 0.3s ease;
         }
 
         .condition-item:hover {
@@ -215,16 +213,20 @@
             gap: 16px;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #4285f4 0%, #1a73e8 100%);
-            color: white;
+        .btn {
             border: none;
-            padding: 14px 28px;
             border-radius: 8px;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4285f4 0%, #1a73e8 100%);
+            color: white;
+            padding: 14px 28px;
             box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
         }
 
@@ -238,11 +240,6 @@
             color: #5f6368;
             border: 2px solid #e8eaed;
             padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
             margin-right: 12px;
         }
 
@@ -252,25 +249,12 @@
             transform: translateY(-1px);
         }
 
-        .button-group {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            margin-top: 40px;
-            padding-top: 32px;
-            border-top: 2px solid #f1f3f4;
-        }
-
         .add-btn {
             background: linear-gradient(135deg, #34a853 0%, #2d7d32 100%);
             color: white;
-            border: none;
             padding: 10px 20px;
-            border-radius: 8px;
             font-size: 13px;
-            cursor: pointer;
             margin-bottom: 20px;
-            transition: all 0.3s ease;
             box-shadow: 0 2px 8px rgba(52, 168, 83, 0.3);
         }
 
@@ -282,17 +266,23 @@
         .remove-btn {
             background: linear-gradient(135deg, #ea4335 0%, #d33b2c 100%);
             color: white;
-            border: none;
             padding: 6px 12px;
             border-radius: 6px;
             font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
         }
 
         .remove-btn:hover {
             transform: scale(1.05);
             box-shadow: 0 2px 8px rgba(234, 67, 53, 0.4);
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 40px;
+            padding-top: 32px;
+            border-top: 2px solid #f1f3f4;
         }
 
         .stats-grid {
@@ -335,6 +325,14 @@
             height: 100%;
             background: linear-gradient(90deg, #4285f4, #34a853);
             transition: width 0.5s ease;
+        }
+
+        .help-icon {
+            cursor: help;
+            background: none;
+            border: none;
+            padding: 0;
+            font: inherit;
         }
 
         @media (max-width: 768px) {
@@ -434,7 +432,7 @@
           <a href="https://tests.ostrails.eu/tests/" target="_blank" rel="noopener">OSTrails FAIR tests</a>)</span>
                     </div>
                     <div class="section-content">
-                        <button type="button" class="add-btn" onclick="addTestReference()">+ Add Test Reference</button>
+                        <button type="button" class="btn add-btn" onclick="addItem('test')">+ Add Test Reference</button>
                         <div class="progress-bar">
                             <div class="progress-fill" style="width: 100%"></div>
                         </div>
@@ -451,7 +449,7 @@
                         <span>Evaluation Conditions</span>
                     </div>
                     <div class="section-content">
-                        <button type="button" class="add-btn" onclick="addCondition()">+ Add Condition</button>
+                        <button type="button" class="btn add-btn" onclick="addItem('condition')">+ Add Condition</button>
                         <div class="progress-bar">
                             <div class="progress-fill" style="width: 100%"></div>
                         </div>
@@ -462,39 +460,25 @@
                 </div>
 
                 <div class="button-group">
-                    <button type="button" class="btn-secondary" onclick="resetForm()" >
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
                         🔄 Reset Form
+                        <button class="help-icon" title="Hover for help" tabindex="0" 
+                                onmouseover="showHelp('Reset Form - Restore the original Benchmark Algorithm data and lose any changes.')"
+                                onfocus="showHelp('Reset Form - Restore the original Benchmark Algorithm data and lose any changes.')">❓</button>
                     </button>
-                    <button
-                        type="button"
-                        class="icon"
-                        style="cursor:help; background:none; border:none; padding:0; font:inherit;"
-                        title="Hover for help"
-                        tabindex="0"
-                        onmouseover="showHelp('Reset Form - Restore the original Benchmark Algorithm data and lose any changes.')"
-                        onfocus="showHelp('Reset Form - Restore the original Benchmark Algorithm data and lose any changes.')"
-                    >❓</button>
-                    <button type="button" class="btn-secondary" onclick="validateForm()">
+                    
+                    <button type="button" class="btn btn-secondary" onclick="validateForm()">
                         ✅ Validate
-                        <button
-                            class="icon"
-                            style="cursor:help; background:none; border:none; padding:0; font:inherit;"
-                            title="Hover for help"
-                            tabindex="0"
-                            onmouseover="showHelp('Validate - Check if all required fields are filled correctly and show validation results.')"
-                            onfocus="showHelp('Validate - Check if all required fields are filled correctly and show validation results.')"
-                        >❓</button>
+                        <button class="help-icon" title="Hover for help" tabindex="0"
+                                onmouseover="showHelp('Validate - Check if all required fields are filled correctly and show validation results.')"
+                                onfocus="showHelp('Validate - Check if all required fields are filled correctly and show validation results.')">❓</button>
                     </button>
-                    <button type="submit" class="btn-secondary" onclick="exportToGoogleSheetFormat(), exportToJSON">
+                    
+                    <button type="submit" class="btn btn-secondary">
                         💾 Export Configuration
-                        <button
-                            class="icon"
-                            style="cursor:help; background:none; border:none; padding:0; font:inherit;"
-                            title="Hover for help"
-                            tabindex="0"
-                            onmouseover="showHelp('Export Configuration - Download the current configuration as JSON and CSV files.')"
-                            onfocus="showHelp('Export Configuration - Download the current configuration as JSON and CSV files.')"
-                        >❓</button>
+                        <button class="help-icon" title="Hover for help" tabindex="0"
+                                onmouseover="showHelp('Export Configuration - Download the current configuration as JSON and CSV files.')"
+                                onfocus="showHelp('Export Configuration - Download the current configuration as JSON and CSV files.')">❓</button>
                     </button>
                 </div>
             </form>
@@ -502,6 +486,38 @@
     </div>
 
     <script>
+        // Configuration object to reduce magic strings
+        const CONFIG = {
+            itemTypes: {
+                test: {
+                    prefix: 'T',
+                    icon: '🧪',
+                    containerClass: 'test-reference-item',
+                    containerId: 'testReferences',
+                    countProperty: 'testReferenceCount'
+                },
+                condition: {
+                    prefix: 'C',
+                    icon: '⚙️',
+                    containerClass: 'condition-item',
+                    containerId: 'conditions',
+                    countProperty: 'conditionCount'
+                }
+            },
+            helpMessages: {
+                testId: 'Test ID - Enter a unique identifier for this test reference.',
+                testGuid: 'Test GUID - Use a test from https://tests.ostrails.eu/tests/',
+                passWeight: 'Pass Weight - Use an integer greater than zero.',
+                failWeight: 'Fail Weight - Use an integer less than zero.',
+                indeterminateWeight: 'Indeterminate Weight - Use an integer between the Pass and Fail weight range, typically zero.',
+                conditionId: 'Condition ID - Enter a unique identifier for this condition.',
+                conditionDescription: 'Condition Description - Enter a short description for this evaluation condition.',
+                formula: 'Formula - Enter a logical formula using test IDs. Ruby syntax is used for the calculation (e.g. conditional equals is == not =).',
+                successMessage: 'Success Message - Enter the message shown when the condition is met.',
+                failMessage: 'Fail Message - Enter the message shown when the condition is NOT met.'
+            }
+        };
+
         // Sample data for initial test references and conditions
         const initialTestReferences = [
             { id: 'T1', guid: 'https://tests.ostrails.eu/tests/fc_unique_identifier', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
@@ -521,7 +537,7 @@
             { id: 'T15', guid: 'https://tests.ostrails.eu/tests/fc_unique_identifier', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
             { id: 'T16', guid: 'https://tests.ostrails.eu/tests/fc_grounded_metadata', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
             { id: 'T17', guid: 'https://tests.ostrails.eu/tests/fc_unique_identifier', passWeight: 5, failWeight: -1, indeterminateWeight: 0 }
-        ];
+            ];
 
         const initialConditions = [
             { id: 'C1', description: 'Metadata are assigned globally unique identifiers', formula: 'T1 > 0', successMessage: 'Acceptable: metadata are assigned globally unique identifiers', failMessage: 'Unacceptable: metadata are not assigned globally unique identifiers' },
@@ -545,133 +561,104 @@
             { id: 'C19', description: 'Majority of ACCESSIBLE tests passed', formula: 'T6 + T7 +T8 + T9 > 13', successMessage: 'Acceptable: Data mostly ACCESSIBLE', failMessage: 'Unacceptable: Data mostly not ACCESSIBLE' },
             { id: 'C20', description: 'Majority of INTEROPERABLE tests passed', formula: 'T10 + T11 + T12 > 13', successMessage: 'Acceptable: Data mostly INTEROPERABLE', failMessage: 'Unacceptable: Data mostly not INTEROPERABLE' },
             { id: 'C21', description: 'Majority of REUSABLE tests passed', formula: 'T13 + T14 + T14 + T16 + T17 > 12', successMessage: 'Acceptable: Data mostly REUSABLE', failMessage: 'Unacceptable: Data mostly not REUSABLE' }     
-    ];
+             ];
 
         let testReferenceCount = 0;
         let conditionCount = 0;
 
-        function initializeForm() {
-            // Load test references
-            initialTestReferences.forEach(test => {
-                addTestReference(test);
-            });
-
-            // Load conditions
-            initialConditions.forEach(condition => {
-                addCondition(condition);
-            });
-
-            updateStats();
+        // Unified function to create help icons
+        function createHelpIcon(helpKey) {
+            return `<span class="help-icon" style="cursor:help;" title="Hover for help" 
+                           onmouseover="showHelp('${CONFIG.helpMessages[helpKey]}')" 
+                           onfocus="showHelp('${CONFIG.helpMessages[helpKey]}')">❓</span>`;
         }
 
-        function addTestReference(data = null) {
-            testReferenceCount++;
-            const container = document.getElementById('testReferences');
-            const div = document.createElement('div');
-            div.className = 'test-reference-item fade-in';
-            div.innerHTML = `
+        // Unified function to create form groups with help
+        function createFormGroup(id, label, type, value, helpKey, attributes = '') {
+            const inputType = type === 'textarea' ? 'textarea' : `input type="${type}"`;
+            const element = type === 'textarea' 
+                ? `<textarea id="${id}" ${attributes}>${value}</textarea>`
+                : `<input type="${type}" id="${id}" value="${value}" ${attributes}>`;
+            
+            return `
+                <div class="form-group">
+                    <label for="${id}">
+                        ${label}
+                        ${helpKey ? createHelpIcon(helpKey) : ''}
+                    </label>
+                    ${element}
+                </div>
+            `;
+        }
+
+        // Template generators
+        function generateTestReferenceTemplate(data) {
+            const config = CONFIG.itemTypes.test;
+            const id = data ? data.id : config.prefix + (testReferenceCount + 1);
+            
+            return `
                 <div class="item-header">
-                    <h4>🧪 ${data ? data.id : 'T' + testReferenceCount}</h4>
-                    <button type="button" class="remove-btn" onclick="removeElement(this.closest('.test-reference-item'))">Remove</button>
+                    <h4>${config.icon} ${id}</h4>
+                    <button type="button" class="remove-btn" onclick="removeElement(this.closest('.${config.containerClass}'))">Remove</button>
                 </div>
-                <div class="form-group">
-                    <label>
-                        Test ID
-                        <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Test ID - Enter a unique identifier for this test reference.')">❓</span>
-                    </label>
-                    <input type="text" value="${data ? data.id : 'T' + testReferenceCount}" name="testId" required>
-                </div>
-                <div class="form-group">
-                    <label title="Use a test from the OSTrails FAIR tests collection">
-                        Enter test GUID (URL)
-                        <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Test GUID - Use a test from https://tests.ostrails.eu/tests/')">❓</span>
-                    </label>
-                    <input type="url" value="${data ? data.guid : ''}" name="testGuid" placeholder="https://tests.ostrails.eu/tests/..." required>
-                </div>
+                ${createFormGroup('testId', 'Test ID', 'text', id, 'testId', 'name="testId" required')}
+                ${createFormGroup('testGuid', 'Enter test GUID (URL)', 'url', data ? data.guid : '', 'testGuid', 'name="testGuid" placeholder="https://tests.ostrails.eu/tests/..." required')}
                 <div class="row-three">
-                    <div class="form-group">
-                        <label title="Use an integer greater than zero">
-                            Pass Weight
-                            <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Pass Weight - Use an integer greater than zero.')">❓</span>
-                        </label>
-                        <input type="number" value="${data ? data.passWeight : 5}" name="passWeight" required>
-                    </div>
-                    <div class="form-group">
-                        <label title="Use an integer less than zero">
-                            Fail Weight
-                            <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Fail Weight - Use an integer less than zero.')">❓</span>
-                        </label>
-                        <input type="number" value="${data ? data.failWeight : -1}" name="failWeight" required>
-                    </div>
-                    <div class="form-group">
-                        <label title="Use an integer between the Pass and Fail weight range, typically zero">
-                            Indeterminate Weight
-                            <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Indeterminate Weight - Use an integer between the Pass and Fail weight range, typically zero.')">❓</span>
-                        </label>
-                        <input type="number" value="${data ? data.indeterminateWeight : 0}" name="indeterminateWeight" required>
-                    </div>
+                    ${createFormGroup('passWeight', 'Pass Weight', 'number', data ? data.passWeight : 5, 'passWeight', 'name="passWeight" required')}
+                    ${createFormGroup('failWeight', 'Fail Weight', 'number', data ? data.failWeight : -1, 'failWeight', 'name="failWeight" required')}
+                    ${createFormGroup('indeterminateWeight', 'Indeterminate Weight', 'number', data ? data.indeterminateWeight : 0, 'indeterminateWeight', 'name="indeterminateWeight" required')}
                 </div>
             `;
+        }
+
+        function generateConditionTemplate(data) {
+            const config = CONFIG.itemTypes.condition;
+            const id = data ? data.id : config.prefix + (conditionCount + 1);
+            
+            return `
+                <div class="item-header">
+                    <h4>${config.icon} ${id}</h4>
+                    <button type="button" class="remove-btn" onclick="removeElement(this.closest('.${config.containerClass}'))">Remove</button>
+                </div>
+                ${createFormGroup('conditionId', 'Condition ID', 'text', id, 'conditionId', 'name="conditionId" required')}
+                ${createFormGroup('conditionDescription', 'Description', 'textarea', data ? data.description : '', 'conditionDescription', 'name="conditionDescription" rows="2" required')}
+                ${createFormGroup('formula', 'Formula', 'text', data ? data.formula : '', 'formula', 'name="conditionFormula" placeholder="e.g., T1 > 0" required')}
+                <div class="row">
+                    ${createFormGroup('successMessage', 'Success Message', 'textarea', data ? data.successMessage : '', 'successMessage', 'name="successMessage" rows="3" required')}
+                    ${createFormGroup('failMessage', 'Fail Message', 'textarea', data ? data.failMessage : '', 'failMessage', 'name="failMessage" rows="3" required')}
+                </div>
+            `;
+        }
+
+        // Unified add item function
+        function addItem(type, data = null) {
+            const config = CONFIG.itemTypes[type];
+            const container = document.getElementById(config.containerId);
+            const div = document.createElement('div');
+            div.className = `item ${config.containerClass} fade-in`;
+            
+            if (type === 'test') {
+                div.innerHTML = generateTestReferenceTemplate(data);
+                testReferenceCount++;
+            } else if (type === 'condition') {
+                div.innerHTML = generateConditionTemplate(data);
+                conditionCount++;
+            }
+            
             container.appendChild(div);
             updateStats();
         }
 
-        function addCondition(data = null) {
-            conditionCount++;
-            const container = document.getElementById('conditions');
-            const div = document.createElement('div');
-            div.className = 'condition-item fade-in';
-            div.innerHTML = `
-                <div class="item-header">
-                    <h4>⚙️ ${data ? data.id : 'C' + conditionCount}</h4>
-                    <button type="button" class="remove-btn" onclick="removeElement(this.closest('.condition-item'))">Remove</button>
-                </div>
-                <div class="form-group">
-                    <label>
-                        Condition ID
-                        <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Condition ID - Enter a unique identifier for this condition.')">❓</span>
-                    </label>
-                    <input type="text" value="${data ? data.id : 'C' + conditionCount}" name="conditionId" required>
-                </div>
-                <div class="form-group">
-                    <label>
-                        Description
-                        <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Condition Description - Enter a short description for this evaluation condition.')">❓</span>
-                    </label>
-                    <textarea name="conditionDescription" rows="2" required>${data ? data.description : ''}</textarea>
-                </div>
-                <div class="form-group">
-                    <label>
-                        Formula
-                        <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Formula - Enter a logical formula using test IDs. Ruby syntax is used for the calculation (e.g. conditional equals is == not =).')">❓</span>
-                    </label>
-                    <input type="text" value="${data ? data.formula : ''}" name="conditionFormula" placeholder="e.g., T1 > 0" required>
-                </div>
-                <div class="row">
-                    <div class="form-group">
-                        <label>
-                            Success Message
-                            <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Success Message - Enter the message shown when the condition is met.')">❓</span>
-                        </label>
-                        <textarea name="successMessage" rows="3" required>${data ? data.successMessage : ''}</textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>
-                            Fail Message
-                            <span class="icon" style="cursor:help;" title="Hover for help" onmouseover="showHelp('Fail Message - Enter the message shown when the condition is NOT met.')">❓</span>
-                        </label>
-                        <textarea name="failMessage" rows="3" required>${data ? data.failMessage : ''}</textarea>
-                    </div>
-                </div>
-            `;
-            container.appendChild(div);
+        function initializeForm() {
+            initialTestReferences.forEach(test => addItem('test', test));
+            initialConditions.forEach(condition => addItem('condition', condition));
             updateStats();
         }
 
         function removeElement(element) {
             if (confirm('Are you sure you want to remove this item?')) {
-               type = element.classList.contains('test-reference-item') ? 'Test Reference' : 'Condition';
-                if (type === 'Test Reference') {
+                const isTestReference = element.classList.contains('test-reference-item');
+                if (isTestReference) {
                     testReferenceCount--;
                 } else {
                     conditionCount--;
@@ -686,37 +673,40 @@
             document.getElementById('conditionCount').textContent = document.querySelectorAll('.condition-item').length;
         }
 
+        // Unified validation function
+        function validateField(field, errors) {
+            const label = field.closest('.form-group').querySelector('label').textContent.replace('❓', '').trim();
+            
+            if (!field.value.trim()) {
+                field.style.borderColor = '#ea4335';
+                errors.push(`${label} is required`);
+                return false;
+            }
+            
+            if (field.type === 'url' && !isValidURL(field.value)) {
+                field.style.borderColor = '#ea4335';
+                errors.push(`${label} must be a valid URL`);
+                return false;
+            }
+            
+            field.style.borderColor = '#34a853';
+            return true;
+        }
+
         function validateForm() {
             const form = document.getElementById('algorithmForm');
             let isValid = true;
             let errors = [];
 
-            // Validate required fields
             const requiredFields = form.querySelectorAll('[required]');
             requiredFields.forEach(field => {
-                if (!field.value.trim()) {
+                if (!validateField(field, errors)) {
                     isValid = false;
-                    field.style.borderColor = '#ea4335';
-                    errors.push(`${field.closest('.form-group').querySelector('label').textContent} is required`);
-                } else {
-                    field.style.borderColor = '#34a853';
                 }
             });
 
-            // Validate URLs
-            const urlFields = form.querySelectorAll('input[type="url"]');
-            urlFields.forEach(field => {
-                if (field.value && !isValidURL(field.value)) {
-                    isValid = false;
-                    field.style.borderColor = '#ea4335';
-                    errors.push(`${field.closest('.form-group').querySelector('label').textContent} must be a valid URL`);
-                }
-            });
-
-            // Show validation results
             if (isValid) {
                 alert('✅ Form validation passed! All fields are correctly filled.');
-                // Reset border colors to default
                 form.querySelectorAll('input, textarea').forEach(field => {
                     field.style.borderColor = '#34a853';
                     setTimeout(() => field.style.borderColor = '#e8eaed', 2000);
@@ -739,20 +729,26 @@
 
         function resetForm() {
             if (confirm('Are you sure you want to reset the form? This will restore the original Benchmark Algorithm data and lose any changes.')) {
-                // Reset form to loading state
                 document.body.classList.add('loading');
                 
                 setTimeout(() => {
+                    // Clear containers
                     document.getElementById('testReferences').innerHTML = '';
                     document.getElementById('conditions').innerHTML = '';
                     testReferenceCount = 0;
                     conditionCount = 0;
                     
                     // Reset property values
-                    document.getElementById('algorithmName').value = 'Generic benchmark algorithm';
-                    document.getElementById('benchmarkGuid').value = 'https://ostrails.github.io/sandbox/mockbenchmark1.ttl';
-                    document.getElementById('relevantCommunity').value = 'http://www.fairsharing.org/ontology/subject/SRAO_0000002';
-                    document.getElementById('digitalObjectType').value = 'https://schema.org/Dataset';
+                    const defaultValues = {
+                        algorithmName: 'Generic benchmark algorithm',
+                        benchmarkGuid: 'https://ostrails.github.io/sandbox/mockbenchmark1.ttl',
+                        relevantCommunity: 'http://www.fairsharing.org/ontology/subject/SRAO_0000002',
+                        digitalObjectType: 'https://schema.org/Dataset'
+                    };
+                    
+                    Object.entries(defaultValues).forEach(([id, value]) => {
+                        document.getElementById(id).value = value;
+                    });
                     
                     initializeForm();
                     document.body.classList.remove('loading');
@@ -760,9 +756,29 @@
             }
         }
 
-        function exportToJSON() {
+        function collectItems(className, fieldNames) {
+            const items = [];
+            const elements = document.querySelectorAll(`.${className}`);
             
-            // Collect property data
+            elements.forEach(item => {
+                const inputs = item.querySelectorAll('input, textarea');
+                const itemData = {};
+                
+                fieldNames.forEach((fieldName, index) => {
+                    let value = inputs[index].value;
+                    if (inputs[index].type === 'number') {
+                        value = parseInt(value);
+                    }
+                    itemData[fieldName] = value;
+                });
+                
+                items.push(itemData);
+            });
+            
+            return items;
+        }
+
+        function exportToJSON() {
             const propertyData = {
                 algorithmName: document.getElementById('algorithmName').value,
                 benchmarkGuid: document.getElementById('benchmarkGuid').value,
@@ -770,33 +786,8 @@
                 digitalObjectType: document.getElementById('digitalObjectType').value
             };
 
-            // Collect test references
-            const testReferences = [];
-            const testItems = document.querySelectorAll('.test-reference-item');
-            testItems.forEach(item => {
-                const inputs = item.querySelectorAll('input');
-                testReferences.push({
-                    id: inputs[0].value,
-                    guid: inputs[1].value,
-                    passWeight: parseInt(inputs[2].value),
-                    failWeight: parseInt(inputs[3].value),
-                    indeterminateWeight: parseInt(inputs[4].value)
-                });
-            });
-
-            // Collect conditions
-            const conditions = [];
-            const conditionItems = document.querySelectorAll('.condition-item');
-            conditionItems.forEach(item => {
-                const inputs = item.querySelectorAll('input, textarea');
-                conditions.push({
-                    id: inputs[0].value,
-                    description: inputs[1].value,
-                    formula: inputs[2].value,
-                    successMessage: inputs[3].value,
-                    failMessage: inputs[4].value
-                });
-            });
+            const testReferences = collectItems('test-reference-item', ['id', 'guid', 'passWeight', 'failWeight', 'indeterminateWeight']);
+            const conditions = collectItems('condition-item', ['id', 'description', 'formula', 'successMessage', 'failMessage']);
 
             return {
                 metadata: {
@@ -815,22 +806,18 @@
         function exportToGoogleSheetFormat() {
             const data = exportToJSON();
             
-            // Create Google Sheets compatible format
             let csvContent = "Property,Value\n";
-            csvContent += `Algorithm Name,"${data.property.algorithmName}"\n`;
-            csvContent += `Benchmark GUID,"${data.property.benchmarkGuid}"\n`;
-            csvContent += `Relevant Community,"${data.property.relevantCommunity}"\n`;
-            csvContent += `Applicable Digital Object Type,"${data.property.digitalObjectType}"\n`;
-            csvContent += "\n";
-            csvContent += "Test Reference,Test GUID,Pass Weight,Fail Weight,Indeterminate Weight\n";
+            Object.entries(data.property).forEach(([key, value]) => {
+                const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                csvContent += `"${formattedKey}","${value}"\n`;
+            });
             
+            csvContent += "\nTest Reference,Test GUID,Pass Weight,Fail Weight,Indeterminate Weight\n";
             data.testReferences.forEach(test => {
                 csvContent += `"${test.id}","${test.guid}",${test.passWeight},${test.failWeight},${test.indeterminateWeight}\n`;
             });
             
-            csvContent += "\n";
-            csvContent += "Condition,Description,Formula,Success Message,Fail Message\n";
-            
+            csvContent += "\nCondition,Description,Formula,Success Message,Fail Message\n";
             data.conditions.forEach(condition => {
                 csvContent += `"${condition.id}","${condition.description}","${condition.formula}","${condition.successMessage}","${condition.failMessage}"\n`;
             });
@@ -838,14 +825,25 @@
             return csvContent;
         }
 
-        document.getElementById('algorithmForm').addEventListener('submit', function(e) {
+        function downloadFile(content, filename, type) {
+            const blob = new Blob([content], { type: type });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function handleFormSubmit(e) {
             e.preventDefault();
             
             if (!validateForm()) {
                 return;
             }
 
-            // Show loading state
             const submitBtn = e.target.querySelector('[type="submit"]');
             const originalText = submitBtn.textContent;
             submitBtn.textContent = '⏳ Exporting...';
@@ -854,59 +852,36 @@
             setTimeout(() => {
                 const jsonData = exportToJSON();
                 const csvData = exportToGoogleSheetFormat();
+                const timestamp = new Date().toISOString().split('T')[0];
                 
-                // Create downloadable JSON file
-                const jsonBlob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
-                const jsonUrl = URL.createObjectURL(jsonBlob);
-                const jsonLink = document.createElement('a');
-                jsonLink.href = jsonUrl;
-                jsonLink.download = `generic_benchmark_algorithm_${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(jsonLink);
-                jsonLink.click();
-                document.body.removeChild(jsonLink);
-                URL.revokeObjectURL(jsonUrl);
+                downloadFile(JSON.stringify(jsonData, null, 2), `generic_benchmark_algorithm_${timestamp}.json`, 'application/json');
+                downloadFile(csvData, `generic_benchmark_algorithm_${timestamp}.csv`, 'text/csv');
 
-                // Create downloadable CSV file for Google Sheets
-                const csvBlob = new Blob([csvData], { type: 'text/csv' });
-                const csvUrl = URL.createObjectURL(csvBlob);
-                const csvLink = document.createElement('a');
-                csvLink.href = csvUrl;
-                csvLink.download = `generic_benchmark_algorithm_${new Date().toISOString().split('T')[0]}.csv`;
-                document.body.appendChild(csvLink);
-                csvLink.click();
-                document.body.removeChild(csvLink);
-                URL.revokeObjectURL(csvUrl);
-
-                // Reset button
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
 
-                // Show success message
                 alert('🎉 Configuration exported successfully!\n\n📄 JSON file: Complete structured data\n📊 CSV file: Ready to import into Google Sheets\n\nBoth files have been downloaded to your computer.');
             }, 1000);
-        });
+        }
 
-        // Add keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey || e.metaKey) {
-                switch(e.key) {
-                    case 's':
-                        e.preventDefault();
-                        document.getElementById('algorithmForm').dispatchEvent(new Event('submit'));
-                        break;
-                    case 'r':
-                        e.preventDefault();
-                        resetForm();
-                        break;
+        function addKeyboardShortcuts() {
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    switch(e.key) {
+                        case 's':
+                            e.preventDefault();
+                            document.getElementById('algorithmForm').dispatchEvent(new Event('submit'));
+                            break;
+                        case 'r':
+                            e.preventDefault();
+                            resetForm();
+                            break;
+                    }
                 }
-            }
-        });
+            });
+        }
 
-        // Initialize the form when page loads
-        window.addEventListener('DOMContentLoaded', function() {
-            initializeForm();
-            
-            // Add some visual feedback
+        function animateSections() {
             const sections = document.querySelectorAll('.section');
             sections.forEach((section, index) => {
                 setTimeout(() => {
@@ -919,27 +894,37 @@
                     }, 100);
                 }, index * 200);
             });
-        });
+        }
 
-        // Add tooltips and help text
+        function setupAutoBackup() {
+            setInterval(function() {
+                try {
+                    const data = exportToJSON();
+                    const backup = {
+                        data: data,
+                        timestamp: new Date().toISOString()
+                    };
+                    console.log('Auto-backup created at:', backup.timestamp);
+                } catch (error) {
+                    console.warn('Auto-backup failed:', error);
+                }
+            }, 30000);
+        }
+
         function showHelp(message) {
             alert('💡 Help: ' + message);
         }
 
-        // Auto-save to localStorage every 30 seconds (as backup)
-        setInterval(function() {
-            try {
-                const data = exportToJSON();
-                const backup = {
-                    data: data,
-                    timestamp: new Date().toISOString()
-                };
-                // Note: Using a simple backup mechanism since localStorage isn't available
-                console.log('Auto-backup created at:', backup.timestamp);
-            } catch (error) {
-                console.warn('Auto-backup failed:', error);
-            }
-        }, 30000);
+        // Initialize everything when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            initializeForm();
+            animateSections();
+            addKeyboardShortcuts();
+            setupAutoBackup();
+            
+            // Attach event listeners
+            document.getElementById('algorithmForm').addEventListener('submit', handleFormSubmit);
+        });
     </script>
 </body>
 </html>
