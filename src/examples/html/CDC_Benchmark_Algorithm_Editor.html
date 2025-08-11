@@ -2,9 +2,9 @@
 <html lang="en">
 <!--
     File: CDC_Benchmark_Algorithm_Editor.html
-    Purpose: Form for editing and managing generic benchmark algorithms. 
+    Purpose: Form for editing and managing benchmark algorithms. 
     The form allows users to define algorithm properties, test references, and evaluation conditions.
-    Use can export the configuration as JSON and CSV files, then import the CVS into a Google Sheet for use 
+    Use can export the configuration as Excel or CSV files, then import the CVS into a Google Sheet for use 
     with the FAIR Champion Benchmark Quality Assessment tool.
     The Google Sheet must be editable by anonymous users.
 
@@ -20,6 +20,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CDC Benchmark Algorithm Editor</title>
+
+     <!-- Load PapaParse from CDNJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    
+    <!-- Load SheetJS (XLSX) from CDNJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Google+Sans|Roboto:300,400,500,700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -376,7 +384,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎯 Generic Benchmark Algorithm Editor</h1>
+            <h1>🎯 CDC Benchmark Algorithm Editor</h1>
             <p>Use this form to generate a CSV file that can be imported into a Benchmark Configuration Google Sheet for use with the 
       <a href="https://tools.ostrails.eu/champion/assess/algorithm/new" target="_blank" rel="noopener">FAIR Champion Benchmark Quality Assessment tool</a>
     </p>
@@ -404,7 +412,7 @@
                     <div class="section-content">
                         <div class="form-group">
                             <label for="algorithmName">Algorithm Name</label>
-                            <input type="text" id="algorithmName" value="Generic benchmark algorithm" required>
+                            <input type="text" id="algorithmName" value="CDC benchmark algorithm" required>
                         </div>
                         
                         <div class="form-group">
@@ -474,11 +482,18 @@
                                 onfocus="showHelp('Validate - Check if all required fields are filled correctly and show validation results.')">❓</button>
                     </button>
                     
-                    <button type="submit" class="btn btn-secondary">
-                        💾 Export Configuration
+                    <button type="button" class="btn btn-secondary" onclick="exportToExcel()">
+                        📊 Export to Excel
                         <button class="help-icon" title="Hover for help" tabindex="0"
-                                onmouseover="showHelp('Export Configuration - Download the current configuration as JSON and CSV files.')"
-                                onfocus="showHelp('Export Configuration - Download the current configuration as JSON and CSV files.')">❓</button>
+                                onmouseover="showHelp('Export to Excel - Download the current configuration as an Excel (.xlsx) file.')"
+                                onfocus="showHelp('Export to Excel - Download the current configuration as an Excel (.xlsx) file.')">❓</button>
+                    </button>
+
+                    <button type="submit" class="btn btn-secondary" onclick="exportToGoogleSheetFormat()">
+                        💾 Export to CSV
+                        <button class="help-icon" title="Hover for help" tabindex="0"
+                                onmouseover="showHelp('Export Configuration - Download the current configuration as CSV files.')"
+                                onfocus="showHelp('Export Configuration - Download the current configuration as CSV files.')">❓</button>
                     </button>
                 </div>
             </form>
@@ -521,47 +536,13 @@
         // Sample data for initial test references and conditions
         const initialTestReferences = [
             { id: 'T1', guid: 'https://tests.ostrails.eu/tests/fc_unique_identifier', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
-            { id: 'T2', guid: 'https://tests.ostrails.eu/tests/fc_unique_identifier', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
-            { id: 'T3', guid: 'https://tests.ostrails.eu/tests/fc_structured_metadata', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
-            { id: 'T4', guid: 'https://tests.ostrails.eu/tests/fc_unique_identifier', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
-            { id: 'T5', guid: 'https://tests.ostrails.eu/tests/fc_searchable', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
-            { id: 'T6', guid: 'https://tests.ostrails.eu/tests/fc_metadata_protocol', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
-            { id: 'T7', guid: 'https://tests.ostrails.eu/tests/fc_data_protocol', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
-            { id: 'T8', guid: 'https://tests.ostrails.eu/tests/fc_data_authorization', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
-            { id: 'T9', guid: 'https://tests.ostrails.eu/tests/fc_metadata_identifier_persistence', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
-            { id: 'T10', guid: 'https://tests.ostrails.eu/tests/fc_data_kr_language_weak', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
-            { id: 'T11', guid: 'https://tests.ostrails.eu/tests/fc_metadata_uses_fair_vocabularies', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
-            { id: 'T12', guid: 'https://tests.ostrails.eu/tests/fc_metadata_outward_links', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
-            { id: 'T13', guid: 'https://tests.ostrails.eu/tests/fc_unique_identifier', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
-            { id: 'T14', guid: 'https://tests.ostrails.eu/tests/fc_metadata_includes_license_weak', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
-            { id: 'T15', guid: 'https://tests.ostrails.eu/tests/fc_unique_identifier', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
-            { id: 'T16', guid: 'https://tests.ostrails.eu/tests/fc_grounded_metadata', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
-            { id: 'T17', guid: 'https://tests.ostrails.eu/tests/fc_unique_identifier', passWeight: 5, failWeight: -1, indeterminateWeight: 0 }
-            ];
+            { id: 'T2', guid: 'https://tests.ostrails.eu/tests/fc_searchable', passWeight: 5, failWeight: -1, indeterminateWeight: 0 }
+        ];
 
         const initialConditions = [
             { id: 'C1', description: 'Metadata are assigned globally unique identifiers', formula: 'T1 > 0', successMessage: 'Acceptable: metadata are assigned globally unique identifiers', failMessage: 'Unacceptable: metadata are not assigned globally unique identifiers' },
-            { id: 'C2', description: 'Metadata are assigned persistent identifiers', formula: 'T2 > 0', successMessage: 'Acceptable: metadata are assigned persistent identifiers', failMessage: 'Unacceptable: metadata are not assigned persistent identifiers' },
-            { id: 'C3', description: 'Data are described with rich metadata', formula: 'T3 > 0', successMessage: 'Acceptable: data are described with rich metadata', failMessage: 'Unacceptable: data are not described with rich metadata' },
-            { id: 'C4', description: 'Metadata clearly and explicitly include the identifier of the data they describe', formula: 'T4 > 0', successMessage: 'Acceptable: data identifier found', failMessage: 'Unacceptable: data identifier not found' },
-            { id: 'C5', description: 'Metadata are registered or indexed in a searchable resource', formula: 'T5 > 0', successMessage: 'Acceptable: metadata are searchable', failMessage: 'Unacceptable: metadata are not searchable' },
-            { id: 'C6', description: 'Metadata are retrievable by their identifier using a standardized communications protocol', formula: 'T6 > 0', successMessage: 'Acceptable: metadata are retreivable via a standardized communications protocol', failMessage: 'Unacceptable: metadata are not retreivable via a standardized communications protocol' },
-            { id: 'C7', description: 'The protocol is open, free, and universally implementable', formula: 'T7 > 0', successMessage: 'Acceptable: the protocol is open, free, and universally implementable', failMessage: 'Unacceptable: the protocol is not open, free, and universally implementable' },
-            { id: 'C8', description: 'The protocol allows for an authentication and authorization procedure, where necessary', formula: 'T8 > 0', successMessage: 'Acceptable: the protocol allows for an authentication and authorization procedure, where necessary', failMessage: 'Unacceptable: the protocol does not allow for an authentication and authorization procedure, where necessary' },
-            { id: 'C9', description: 'Metadata are accessible, even when the data are no longer available', formula: 'T9 > 0', successMessage: 'Acceptable: metadata are accessible, even when the data are no longer available', failMessage: 'Unacceptable: metadata are not accessible when the data are no longer available' },
-            { id: 'C10', description: 'Metadata use a formal, accessible, shared, and broadly applicable language for knowledge representation', formula: 'T10 > 0', successMessage: 'Acceptable: metadata use a formal, accessible, shared, and broadly applicable language for knowledge representation', failMessage: 'Unacceptable: metadata does not use a formal, accessible, shared, and broadly applicable language for knowledge representation' },
-            { id: 'C11', description: 'Metadata use vocabularies that follow FAIR principles', formula: 'T11 > 0', successMessage: 'Acceptable: metadata use vocabularies that follow FAIR principles', failMessage: 'Unacceptable: metadata use vocabularies that do not follow FAIR principles' },
-            { id: 'C12', description: 'Metadata include qualified references to other (meta)data', formula: 'T12 > 0', successMessage: 'Acceptable: metadata include qualified references to other metadata', failMessage: 'Unacceptable: metadata do not include qualified references to other metadata' },
-            { id: 'C13', description: 'Metadata are richly described with a plurality of accurate and relevant attributes', formula: 'T13 > 0', successMessage: 'Acceptable: data richly described with a plurality of accurate and relevant attributes', failMessage: 'Unacceptable: data not richly described with a plurality of accurate and relevant attributes' },
-            { id: 'C14', description: 'Metadata are released with a clear and accessible data usage license', formula: 'T14 > 0', successMessage: 'Acceptable: metadata released with a clear and accessible data usage license', failMessage: 'Unacceptable: metadata not released with a clear and accessible data usage license' },
-            { id: 'C15', description: 'Metadata are associated with detailed provenance', formula: 'T15 > 0', successMessage: 'Acceptable: data associated with detailed provenance', failMessage: 'Unacceptable: data not associated with detailed provenance' },
-            { id: 'C16', description: 'Metadata meet domain-relevant community standards', formula: 'T16 > 0', successMessage: 'Acceptable: metadata meet domain-relevant community standards', failMessage: 'Unacceptable: metadata do not meet domain-relevant community standards' },
-            { id: 'C17', description: 'GUID matches a GUID scheme recognised as being globally unique', formula: 'T17 > 0', successMessage: 'Acceptable: GUID matches a scheme recognised as being globally unique', failMessage: 'Unacceptable: GUID does not match a scheme recognised as being globally unique' },
-            { id: 'C18', description: 'Majority of FINDABLE tests passed', formula: 'T1 + T2 +T3 +T4 +T5 > 12', successMessage: 'Acceptable: Data mostly FINDABLE', failMessage: 'Unacceptable: Data mostly not FINDABLE' },
-            { id: 'C19', description: 'Majority of ACCESSIBLE tests passed', formula: 'T6 + T7 +T8 + T9 > 13', successMessage: 'Acceptable: Data mostly ACCESSIBLE', failMessage: 'Unacceptable: Data mostly not ACCESSIBLE' },
-            { id: 'C20', description: 'Majority of INTEROPERABLE tests passed', formula: 'T10 + T11 + T12 > 13', successMessage: 'Acceptable: Data mostly INTEROPERABLE', failMessage: 'Unacceptable: Data mostly not INTEROPERABLE' },
-            { id: 'C21', description: 'Majority of REUSABLE tests passed', formula: 'T13 + T14 + T14 + T16 + T17 > 12', successMessage: 'Acceptable: Data mostly REUSABLE', failMessage: 'Unacceptable: Data mostly not REUSABLE' }     
-             ];
+            { id: 'C2', description: 'Metadata are assigned globally unique identifiers and are registered or indexed in a searchable resource', formula: 'T1 + T2 == 10', successMessage: 'Acceptable: both tests passed', failMessage: 'Unacceptable: one or more tests failed' }
+        ];
 
         let testReferenceCount = 0;
         let conditionCount = 0;
@@ -740,9 +721,9 @@
                     
                     // Reset property values
                     const defaultValues = {
-                        algorithmName: 'Generic benchmark algorithm',
+                        algorithmName: 'CDC benchmark algorithm',
                         benchmarkGuid: 'https://ostrails.github.io/sandbox/mockbenchmark1.ttl',
-                        relevantCommunity: 'http://www.fairsharing.org/ontology/subject/SRAO_0000002',
+                        relevantCommunity: 'https://www.fairsharing.org/ontology/subject/SRAO_0000002',
                         digitalObjectType: 'https://schema.org/Dataset'
                     };
                     
@@ -791,7 +772,7 @@
 
             return {
                 metadata: {
-                    title: "Generic Benchmark Algorithm Configuration",
+                    title: "CDC Benchmark Algorithm Configuration",
                     version: "1.0",
                     exportedAt: new Date().toISOString(),
                     totalTests: testReferences.length,
@@ -825,6 +806,142 @@
             return csvContent;
         }
 
+        /**
+         * Enhanced version with more options
+         * @param {string} csvContent - The CSV content to convert to Excel
+         * @param {string} filename - The filename for the Excel file (without extension)
+         * @param {Object} options - Configuration options
+         */
+        function downloadExcelFromCSVAdvanced(csvContent, filename, options = {}) {
+            const {
+                sheetName = 'Sheet1',
+                hasHeaders = true,
+                delimiter = ',',
+                headerStyle = {
+                    font: { bold: true, color: { rgb: "FFFFFF" } },
+                    fill: { fgColor: { rgb: "4472C4" } },
+                    alignment: { horizontal: "center", vertical: "center" }
+                },
+                autoFilter = true,
+                freezeFirstRow = true
+            } = options;
+
+            try {
+                // Use PapaParse for more robust CSV parsing if available
+                let data;
+                if (typeof Papa !== 'undefined') {
+                    const parsed = Papa.parse(csvContent, {
+                        delimiter: delimiter,
+                        skipEmptyLines: false,
+                        trimHeaders: true
+                    });
+                    data = parsed.data;
+                } else {
+                    // Fallback to simple parsing
+                    data = csvContent.split('\n')
+                        .filter(line => line.trim() !== '')
+                        .map(line => line.split(delimiter).map(cell => cell.replace(/^"|"$/g, '').trim()));
+                }
+
+                const workbook = XLSX.utils.book_new();
+                const worksheet = XLSX.utils.aoa_to_sheet(data);
+                
+                // Apply styling if headers exist
+                if (hasHeaders && data.length > 0) {
+                    const range = XLSX.utils.decode_range(worksheet['!ref']);
+                    
+                    // Style header row
+                    for (let C = range.s.c; C <= range.e.c; ++C) {
+                        const headerCell = XLSX.utils.encode_cell({r: 0, c: C});
+                        if (worksheet[headerCell]) {
+                            worksheet[headerCell].s = headerStyle;
+                        }
+                    }
+                    
+                    // Add auto filter
+                    if (autoFilter) {
+                        worksheet['!autofilter'] = { ref: worksheet['!ref'] };
+                    }
+                    
+                    // Freeze first row
+                    if (freezeFirstRow) {
+                        worksheet['!freeze'] = { xSplit: 0, ySplit: 1 };
+                    }
+                }
+                
+                // Auto-size columns
+                const range = XLSX.utils.decode_range(worksheet['!ref']);
+                const colWidths = [];
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    let maxWidth = 10;
+                    for (let R = range.s.r; R <= range.e.r; ++R) {
+                        const cellAddress = XLSX.utils.encode_cell({r: R, c: C});
+                        const cell = worksheet[cellAddress];
+                        if (cell && cell.v) {
+                            const cellLength = cell.v.toString().length;
+                            maxWidth = Math.max(maxWidth, cellLength);
+                        }
+                    }
+                    colWidths[C] = { width: Math.min(maxWidth + 2, 50) };
+                }
+                worksheet['!cols'] = colWidths;
+                
+                XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+                
+                const excelBuffer = XLSX.write(workbook, {
+                    bookType: 'xlsx',
+                    type: 'array',
+                    compression: true
+                });
+                
+                const blob = new Blob([excelBuffer], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                });
+                
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${filename}.xlsx`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                console.log(`Excel file "${filename}.xlsx" downloaded successfully`);
+                return true;
+                
+            } catch (error) {
+                console.error('Error creating Excel file:', error);
+                alert('Error creating Excel file: ' + error.message);
+                return false;
+            }
+        }
+
+        // Function to export to Excel with enhanced options
+        function exportToExcel() {
+            const csvData = exportToGoogleSheetFormat(); // Your existing function
+            const timestamp = new Date().toISOString().split('T')[0];
+           
+            // Ensure PapaParse and XLSX are loaded
+            if (typeof Papa === 'undefined' || typeof XLSX === 'undefined') {
+                alert('Error: Required libraries (PapaParse or XLSX) are not loaded. Please ensure they are included in your HTML.');
+                return;
+            }
+
+              if (!validateForm()) {
+                return;
+            }
+           
+                // Use the enhanced download function
+            downloadExcelFromCSVAdvanced(csvData, `cdc_benchmark_algorithm_${timestamp}`, {
+                sheetName: 'Benchmark Configuration',
+                hasHeaders: true,
+                autoFilter: true,
+                freezeFirstRow: true
+            });
+            alert('🎉 Configuration exported successfully in Excel file format.\n');
+        }
+
         function downloadFile(content, filename, type) {
             const blob = new Blob([content], { type: type });
             const url = URL.createObjectURL(blob);
@@ -854,13 +971,12 @@
                 const csvData = exportToGoogleSheetFormat();
                 const timestamp = new Date().toISOString().split('T')[0];
                 
-                downloadFile(JSON.stringify(jsonData, null, 2), `generic_benchmark_algorithm_${timestamp}.json`, 'application/json');
-                downloadFile(csvData, `generic_benchmark_algorithm_${timestamp}.csv`, 'text/csv');
+                downloadFile(csvData, `cdc_benchmark_algorithm_${timestamp}.csv`, 'text/csv');
 
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
 
-                alert('🎉 Configuration exported successfully!\n\n📄 JSON file: Complete structured data\n📊 CSV file: Ready to import into Google Sheets\n\nBoth files have been downloaded to your computer.');
+                alert('🎉 Configuration exported successfully in CSV file format.\n');
             }, 1000);
         }
 
@@ -899,7 +1015,7 @@
         function setupAutoBackup() {
             setInterval(function() {
                 try {
-                    const data = exportToJSON();
+                    const data = exportToGoogleSheetFormat();
                     const backup = {
                         data: data,
                         timestamp: new Date().toISOString()

@@ -4,7 +4,7 @@
     File: generic_benchmark_algorithm_editor.html
     Purpose: Form for editing and managing generic benchmark algorithms. 
     The form allows users to define algorithm properties, test references, and evaluation conditions.
-    Use can export the configuration as JSON and CSV files, then import the CVS into a Google Sheet for use 
+    Use can export the configuration as Excel or CSV files, then import the CVS into a Google Sheet for use 
     with the FAIR Champion Benchmark Quality Assessment tool.
     The Google Sheet must be editable by anonymous users.
 
@@ -20,6 +20,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generic Benchmark Algorithm Editor</title>
+
+     <!-- Load PapaParse from CDNJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    
+    <!-- Load SheetJS (XLSX) from CDNJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Google+Sans|Roboto:300,400,500,700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -474,11 +482,18 @@
                                 onfocus="showHelp('Validate - Check if all required fields are filled correctly and show validation results.')">❓</button>
                     </button>
                     
-                    <button type="submit" class="btn btn-secondary">
-                        💾 Export Configuration
+                    <button type="button" class="btn btn-secondary" onclick="exportToExcel()">
+                        📊 Export to Excel
                         <button class="help-icon" title="Hover for help" tabindex="0"
-                                onmouseover="showHelp('Export Configuration - Download the current configuration as JSON and CSV files.')"
-                                onfocus="showHelp('Export Configuration - Download the current configuration as JSON and CSV files.')">❓</button>
+                                onmouseover="showHelp('Export to Excel - Download the current configuration as an Excel (.xlsx) file.')"
+                                onfocus="showHelp('Export to Excel - Download the current configuration as an Excel (.xlsx) file.')">❓</button>
+                    </button>
+
+                    <button type="submit" class="btn btn-secondary" onclick="exportToGoogleSheetFormat()">
+                        💾 Export to CSV
+                        <button class="help-icon" title="Hover for help" tabindex="0"
+                                onmouseover="showHelp('Export Configuration - Download the current configuration as CSV files.')"
+                                onfocus="showHelp('Export Configuration - Download the current configuration as CSV files.')">❓</button>
                     </button>
                 </div>
             </form>
@@ -708,7 +723,7 @@
                     const defaultValues = {
                         algorithmName: 'Generic benchmark algorithm',
                         benchmarkGuid: 'https://ostrails.github.io/sandbox/mockbenchmark1.ttl',
-                        relevantCommunity: 'http://www.fairsharing.org/ontology/subject/SRAO_0000002',
+                        relevantCommunity: 'https://www.fairsharing.org/ontology/subject/SRAO_0000002',
                         digitalObjectType: 'https://schema.org/Dataset'
                     };
                     
@@ -791,6 +806,142 @@
             return csvContent;
         }
 
+        /**
+         * Enhanced version with more options
+         * @param {string} csvContent - The CSV content to convert to Excel
+         * @param {string} filename - The filename for the Excel file (without extension)
+         * @param {Object} options - Configuration options
+         */
+        function downloadExcelFromCSVAdvanced(csvContent, filename, options = {}) {
+            const {
+                sheetName = 'Sheet1',
+                hasHeaders = true,
+                delimiter = ',',
+                headerStyle = {
+                    font: { bold: true, color: { rgb: "FFFFFF" } },
+                    fill: { fgColor: { rgb: "4472C4" } },
+                    alignment: { horizontal: "center", vertical: "center" }
+                },
+                autoFilter = true,
+                freezeFirstRow = true
+            } = options;
+
+            try {
+                // Use PapaParse for more robust CSV parsing if available
+                let data;
+                if (typeof Papa !== 'undefined') {
+                    const parsed = Papa.parse(csvContent, {
+                        delimiter: delimiter,
+                        skipEmptyLines: false,
+                        trimHeaders: true
+                    });
+                    data = parsed.data;
+                } else {
+                    // Fallback to simple parsing
+                    data = csvContent.split('\n')
+                        .filter(line => line.trim() !== '')
+                        .map(line => line.split(delimiter).map(cell => cell.replace(/^"|"$/g, '').trim()));
+                }
+
+                const workbook = XLSX.utils.book_new();
+                const worksheet = XLSX.utils.aoa_to_sheet(data);
+                
+                // Apply styling if headers exist
+                if (hasHeaders && data.length > 0) {
+                    const range = XLSX.utils.decode_range(worksheet['!ref']);
+                    
+                    // Style header row
+                    for (let C = range.s.c; C <= range.e.c; ++C) {
+                        const headerCell = XLSX.utils.encode_cell({r: 0, c: C});
+                        if (worksheet[headerCell]) {
+                            worksheet[headerCell].s = headerStyle;
+                        }
+                    }
+                    
+                    // Add auto filter
+                    if (autoFilter) {
+                        worksheet['!autofilter'] = { ref: worksheet['!ref'] };
+                    }
+                    
+                    // Freeze first row
+                    if (freezeFirstRow) {
+                        worksheet['!freeze'] = { xSplit: 0, ySplit: 1 };
+                    }
+                }
+                
+                // Auto-size columns
+                const range = XLSX.utils.decode_range(worksheet['!ref']);
+                const colWidths = [];
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    let maxWidth = 10;
+                    for (let R = range.s.r; R <= range.e.r; ++R) {
+                        const cellAddress = XLSX.utils.encode_cell({r: R, c: C});
+                        const cell = worksheet[cellAddress];
+                        if (cell && cell.v) {
+                            const cellLength = cell.v.toString().length;
+                            maxWidth = Math.max(maxWidth, cellLength);
+                        }
+                    }
+                    colWidths[C] = { width: Math.min(maxWidth + 2, 50) };
+                }
+                worksheet['!cols'] = colWidths;
+                
+                XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+                
+                const excelBuffer = XLSX.write(workbook, {
+                    bookType: 'xlsx',
+                    type: 'array',
+                    compression: true
+                });
+                
+                const blob = new Blob([excelBuffer], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                });
+                
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${filename}.xlsx`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                console.log(`Excel file "${filename}.xlsx" downloaded successfully`);
+                return true;
+                
+            } catch (error) {
+                console.error('Error creating Excel file:', error);
+                alert('Error creating Excel file: ' + error.message);
+                return false;
+            }
+        }
+
+        // Function to export to Excel with enhanced options
+        function exportToExcel() {
+            const csvData = exportToGoogleSheetFormat(); // Your existing function
+            const timestamp = new Date().toISOString().split('T')[0];
+           
+            // Ensure PapaParse and XLSX are loaded
+            if (typeof Papa === 'undefined' || typeof XLSX === 'undefined') {
+                alert('Error: Required libraries (PapaParse or XLSX) are not loaded. Please ensure they are included in your HTML.');
+                return;
+            }
+
+              if (!validateForm()) {
+                return;
+            }
+           
+                // Use the enhanced download function
+            downloadExcelFromCSVAdvanced(csvData, `generic_benchmark_algorithm_${timestamp}`, {
+                sheetName: 'Benchmark Configuration',
+                hasHeaders: true,
+                autoFilter: true,
+                freezeFirstRow: true
+            });
+            alert('🎉 Configuration exported successfully in Excel file format.\n');
+        }
+
         function downloadFile(content, filename, type) {
             const blob = new Blob([content], { type: type });
             const url = URL.createObjectURL(blob);
@@ -820,13 +971,12 @@
                 const csvData = exportToGoogleSheetFormat();
                 const timestamp = new Date().toISOString().split('T')[0];
                 
-                downloadFile(JSON.stringify(jsonData, null, 2), `generic_benchmark_algorithm_${timestamp}.json`, 'application/json');
                 downloadFile(csvData, `generic_benchmark_algorithm_${timestamp}.csv`, 'text/csv');
 
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
 
-                alert('🎉 Configuration exported successfully!\n\n📄 JSON file: Complete structured data\n📊 CSV file: Ready to import into Google Sheets\n\nBoth files have been downloaded to your computer.');
+                alert('🎉 Configuration exported successfully in CSV file format.\n');
             }, 1000);
         }
 
@@ -865,7 +1015,7 @@
         function setupAutoBackup() {
             setInterval(function() {
                 try {
-                    const data = exportToJSON();
+                    const data = exportToGoogleSheetFormat();
                     const backup = {
                         data: data,
                         timestamp: new Date().toISOString()

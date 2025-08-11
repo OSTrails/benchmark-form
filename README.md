@@ -23,9 +23,10 @@ Knowledge of HTML, and/or access to a drag and drop HTML editing tool.
 4. Add one or more [OSTrails tests](https://tests.ostrails.eu/tests/)
 5. Add conditions that the tests results must meet
 6. Validate the form
-7. Export the contents
-8. Import the generated CSV file into a Google Sheets file
-9. Generate a link with for the spreadsheet with permissions 'Anyone on the Internet can edit' (see File->Share-> Share with others)
+7. Export the contents (in either CSV or Excel format)
+8. If exported in CSV format, import the generated CSV file into a Google Sheets file,
+otherwise upload the Excel file to Google Docs and open it with Google Sheets.
+9. Generate a link with for the spreadsheet with permissions 'Anyone on the Internet can edit' (see File->Share->Share with others)
 10. Open the [FAIR Champion Quality Assessment tool](https://tools.ostrails.eu/champion/assess/algorithm) and use the link
 in the Benchmark Configuration Spreadsheet URI field
 11. Enter the URL of a digital object to evaluate in the GUID field
