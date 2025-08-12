@@ -14,7 +14,7 @@
     rdfs:label "CESSDA FAIR Champion Benchmark"^^xsd:string ;
     vivo:abbreviation "CESSDAOSTBenchmark"^^xsd:string ;
     dcterms:description """CESSDA Benchmark created with FAIR Metrics for FAIR Champion in OSTrails"""^^xsd:string ;
-    dcat:keyword  "CESSDA"@en, "FAIR"@en,  "Benchmark"@en,  "OSTrials"@en;
+    dcat:keyword  "CESSDA"@en, "FAIR"@en,  "Benchmark"@en,  "OSTrails"@en;
     dcat:theme  <http://purl.obolibrary.org/obo/NCIT_C142491>;
     dcat:version "0.1.0"^^xsd:string ;
     dcterms:license <http://creativecommons.org/licenses/by/4.0/> ;
