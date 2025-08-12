@@ -840,7 +840,7 @@
                     // Fallback to simple parsing
                     data = csvContent.split('\n')
                         .filter(line => line.trim() !== '')
-                        .map(line => line.split(delimiter).map(cell => cell.replace(/^"|"$/g, '').trim()));
+                        .map(line => line.split(delimiter).map(cell => cell.replace(/(^"|"$)/g, '').trim()));
                 }
 
                 const workbook = XLSX.utils.book_new();
