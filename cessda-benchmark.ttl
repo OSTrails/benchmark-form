@@ -1,0 +1,42 @@
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix vcard: <http://www.w3.org/2006/vcard/ns#> .
+@prefix ftr: <https://w3id.org/ftr#> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix doap: <http://usefulinc.com/ns/doap#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dqv: <http://www.w3.org/ns/dqv#> .
+@prefix vivo: <http://vivoweb.org/ontology/core#> .
+ <https://www.this.com/benchmark/998518b7-da8a-47fe-8416-ad1065761643/FAIRChampionBenchmark> a ftr:Benchmark ;
+    dcterms:identifier <https://www.this.com/benchmark/998518b7-da8a-47fe-8416-ad1065761643/FAIRChampionBenchmarkID> ;
+    dcterms:title "CESSDA FAIR Champion Benchmark"^^xsd:string ;
+    rdfs:label "CESSDA FAIR Champion Benchmark"^^xsd:string ;
+    vivo:abbreviation "CESSDAOSTBenchmark"^^xsd:string ;
+    dcterms:description """CESSDA Benchmark created with FAIR Metrics for FAIR Champion in OSTrails"""^^xsd:string ;
+    dcat:keyword  "CESSDA"@en, "FAIR"@en,  "Benchmark"@en,  "OSTrials"@en;
+    dcat:theme  <http://purl.obolibrary.org/obo/NCIT_C142491>;
+    dcat:version "0.1.0"^^xsd:string ;
+    dcterms:license <http://creativecommons.org/licenses/by/4.0/> ;
+    ftr:status "Active"@en ;
+    dcat:landingPage <https://github.com/OSTrails/benchmark-form/blob/main/README.md> ;
+    dcterms:creator <https://ror.org/02wg9xc72> ;
+    dcat:contactPoint <https://orcid.org/0000-0002-4402-9644>  ;
+    ftr:hasAssociatedMetric  <https://doi.org/10.25504/FAIRsharing.6269>,  <https://doi.org/10.25504/FAIRsharing.6270>, <https://doi.org/10.25504/FAIRsharing.6271>, <https://doi.org/10.25504/FAIRsharing.6272>.
+<https://ror.org/03n6nwv02> a vcard:Organization ;
+    vcard:organization-name "Consortium of European Social Science Data Archives"^^xsd:string .
+<https://orcid.org/0000-0001-6960-357X> a vcard:Individual ;
+    vcard:fn "John Shepherdson"^^xsd:string ;
+    vcard:hasEmail <mailto:john.shepherdson@cessda.eu> .
+<https://doi.org/10.25504/FAIRsharing.6269> a dqv:Metric ;
+    rdfs:label "FAIR Principles - Findable"^^xsd:string ;
+    dcterms:identifier <https://doi.org/10.25504/FAIRsharing.6269> .
+<https://doi.org/10.25504/FAIRsharing.6270> a dqv:Metric ;
+    rdfs:label "FAIR Principles - Accessible"^^xsd:string ;
+    dcterms:identifier <https://doi.org/10.25504/FAIRsharing.6270> .
+<https://doi.org/10.25504/FAIRsharing.6271> a dqv:Metric ;
+    rdfs:label "FAIR Principles - Interoperable"^^xsd:string ;
+    dcterms:identifier <https://doi.org/10.25504/FAIRsharing.6271> .
+<https://doi.org/10.25504/FAIRsharing.6272> a dqv:Metric ;
+    rdfs:label "FAIR Principles - Reusable"^^xsd:string ;
+    dcterms:identifier <https://doi.org/10.25504/FAIRsharing.6272> .
