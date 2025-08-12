@@ -563,7 +563,6 @@
 
         // Unified function to create form groups with help
         function createFormGroup(id, label, type, value, helpKey, attributes = '') {
-            const inputType = type === 'textarea' ? 'textarea' : `input type="${type}"`;
             const element = type === 'textarea' 
                 ? `<textarea id="${id}" ${attributes}>${value}</textarea>`
                 : `<input type="${type}" id="${id}" value="${value}" ${attributes}>`;
@@ -708,10 +707,16 @@
 
         function isValidURL(string) {
             try {
-                new URL(string);
-                return true;
-            } catch (error) {
-                return false;
+        new URL(string);
+            return true;
+        } catch (error) {
+        // Explicitly handle the URL constructor errors
+        if (error instanceof TypeError) {
+            // This is the expected error when URL is invalid
+            return false;
+            }
+        // Re-throw unexpected errors
+        throw error;
             }
         }
 
@@ -974,7 +979,7 @@
             submitBtn.disabled = true;
 
             setTimeout(() => {
-                const jsonData = exportToJSON();
+                // Export to CSV format
                 const csvData = exportToGoogleSheetFormat();
                 const timestamp = new Date().toISOString().split('T')[0];
                 
