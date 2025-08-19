@@ -2,13 +2,28 @@
 # Visit https://bit.ly/cffinit to generate yours today!
 
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below." 
-title: "OSTrails Benchmark Form"
+title: OSTrails Benchmark Form
+message: 'If you use this software, please cite it as below.'
 type: software
-doi: 10.5281/zenodo.000000
-url: "https://github.com/OSTrails/benchmark-form.git
 authors:
-  - given-names: "John"
-    family-names: "Shepherdson"
-    affiliation: "CESSDA ERIC"
-    orcid: "https://orcid.org/0000-0002-4402-9644"
+  - given-names: John
+    family-names: Shepherdson
+    affiliation: CESSDA ERIC
+    orcid: 'https://orcid.org/0000-0002-4402-9644'
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.000000
+    description: Placeholder
+repository-code: 'https://github.com/OSTrails/benchmark-form.git'
+abstract: >-
+  This repository contains the source code for generating
+  the contents of a Google Sheets Benchmark Algorithm file
+  used in conjunction with the FAIR Champion Quality
+  Assessment
+keywords:
+  - FAIR
+  - Benchmark
+license: Apache-2.0
+commit: 47cd741
+version: 2.0.0
+date-released: '2025-08-19'
