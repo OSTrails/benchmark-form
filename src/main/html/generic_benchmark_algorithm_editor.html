@@ -21,7 +21,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generic Benchmark Algorithm Editor</title>
 
-     <!-- Load PapaParse from CDNJS -->
+    <!- Enable CORS globally for any host ->
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
+
+    <!-- Load PapaParse from CDNJS -->
     <script 
         src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"
         integrity="sha512-8d1e5b2c4f3c6f0a7b9e5c8d3f4b1a2f6c5e5b2c4f3c6f0a7b9e5c8d3f4b1a2f6c5e5b2c4f3c6f0a7b9e5c8d3f4b1a2f6c5e5b2c4f3c6f0a7b9e5c8d3f4b1a2f6c5e5b2c4f3c6f0a7b9e5c8d3f4b1a2"
@@ -413,27 +416,79 @@
                 <div class="section fade-in">
                     <div class="section-header">
                         <span class="icon">📋</span>
-                        <span>Algorithm Properties</span>
+                        <span>DCAT Property</span>
                     </div>
                     <div class="section-content">
+                        <!-- ID unchanged -->
                         <div class="form-group">
-                            <label for="algorithmName">Algorithm Name</label>
+                            <label for="algorithmName">Title</label>
                             <input type="text" id="algorithmName" value="Generic benchmark algorithm" required>
                         </div>
                         
+                        <!-- ID new version -->
                         <div class="form-group">
-                            <label for="benchmarkGuid">Benchmark GUID</label>
-                            <input type="url" id="benchmarkGuid" value="https://ostrails.github.io/sandbox/mockbenchmark1.ttl" required>
+                            <label for="algorithmVersion">Version</label>
+                            <input type="text" id="algorithmVersion" value="1.0" required>
+                        </div>
+
+                        <!-- ID new description -->
+                        <div class="form-group">
+                            <label for="algorithmDescription">Description</label>
+                            <input type="text" id="algorithmDescription" value="Used in conjunction with FAIR Champion test runner to calculate FAIR scores." required>
+                        </div>
+
+                        <!-- ID new keyword -->
+                        <div class="form-group">
+                            <label for="algorithmKeywords">Keywords</label>
+                            <input type="text" id="algorithmKeywords" value="FAIR, benchmark, algorithm" required>
+                        </div>
+
+                        <!-- ID new abbreviation -->
+                        <div class="form-group">
+                            <label for="algorithmAbbreviation">Abbreviation</label>
+                            <input type="text" id="algorithmAbbreviation" value="FAIRalgorithm" required>
+                        </div>
+
+                        <!-- ID new repository -->
+                        <div class="form-group">
+                            <label for="algorithmRepository">Repository</label>
+                            <input type="url" id="algorithmRepository" value="https://docs.google.com/spreadsheets/d/16s2klErdtZck2b6i2Zp_PjrgpBBnnrBKaAvTwrnMB4w/edit?gid=0#gid=0" required>
+                        </div>
+
+                        <!-- ID new type -->
+                        <div class="form-group">
+                            <label for="algorithmType">Type</label>
+                            <input type="url" id="algorithmType" value="http://ontology.ethereal.cz/irao/Benchmark" required>
+                        </div>
+
+                        <!-- ID new license -->
+                        <div class="form-group">
+                            <label for="algorithmLicence">Licence</label>
+                            <input type="url" id="algorithmLicence" value="http://creativecommons.org/publicdomain/zero/1.0/" required>
+                        </div>
+
+                        <!-- ID renamed from relevantCommunity to applicationArea DONE -->
+                        <div class="form-group">
+                            <label for="algorithmApplicationArea">Application Area</label>
+                            <input type="url" id="algorithmApplicationArea" value="http://www.fairsharing.org/ontology/subject/SRAO_0000401" required>
+                        </div>
+
+                        <!-- ID renamed from digitalObjectType to algorithmApplicableFor DONE -->
+                        <div class="form-group">
+                            <label for="algorithmApplicableFor">Is Applicable For</label>
+                            <input type="url" id="algorithmApplicableFor" value="https://schema.org/Dataset" required>
+                        </div>
+
+                        <!-- ID changed from benchmarkGuid to algorithmIsImplementationOf DONE -->
+                        <div class="form-group">
+                            <label for="algorithmIsImplementationOf">Registered benchmark GUID</label>
+                            <input type="url" id="algorithmIsImplementationOf" value="https://ostrails.github.io/sandbox/mockbenchmark1.ttl" required>
                         </div>
                         
+                        <!-- ID new algorithmContactPoint -->
                         <div class="form-group">
-                            <label for="relevantCommunity">Relevant Community (URL)</label>
-                            <input type="url" id="relevantCommunity" value="https://www.fairsharing.org/ontology/subject/SRAO_0000002" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="digitalObjectType">Applicable Digital Object Type (URL)</label>
-                            <input type="url" id="digitalObjectType" value="https://schema.org/Dataset" required>
+                            <label for="algorithmContactPoint">Contact Point</label>
+                            <input type="text" id="algorithmContactPoint" value="ann.none@nowhere.uk" required>
                         </div>
                     </div>
                 </div>
@@ -733,9 +788,17 @@
                     // Reset property values
                     const defaultValues = {
                         algorithmName: 'Generic benchmark algorithm',
-                        benchmarkGuid: 'https://ostrails.github.io/sandbox/mockbenchmark1.ttl',
-                        relevantCommunity: 'https://www.fairsharing.org/ontology/subject/SRAO_0000002',
-                        digitalObjectType: 'https://schema.org/Dataset'
+                        algorithmVersion: '1.0',
+                        algorithmDescription: 'Used in conjunction with FAIR Champion test runner to calculate FAIR scores.',
+                        algorithmKeywords: 'FAIR, benchmark, algorithm',
+                        algorithmAbbreviation: 'FAIRalgorithm',
+                        algorithmRepository: 'https://docs.google.com/spreadsheets/d/16s2klErdtZck2b6i2Zp_PjrgpBBnnrBKaAvTwrnMB4w/edit?gid=0#gid=0',
+                        algorithmType: 'https://ontology.ethereal.cz/irao/Benchmark',
+                        algorithmLicence: 'https://creativecommons.org/publicdomain/zero/1.0/',
+                        algorithmApplicationArea: 'https://www.fairsharing.org/ontology/subject/SRAO_0000401',
+                        algorithmApplicableFor: 'https://schema.org/Dataset',
+                        algorithmIsImplementationOf: 'https://ostrails.github.io/sandbox/mockbenchmark1.ttl',
+                        algorithmContactPoint: 'ann.none@now.uk'
                     };
                     
                     Object.entries(defaultValues).forEach(([id, value]) => {
@@ -772,10 +835,18 @@
 
         function exportToJSON() {
             const propertyData = {
-                algorithmName: document.getElementById('algorithmName').value,
-                benchmarkGuid: document.getElementById('benchmarkGuid').value,
-                relevantCommunity: document.getElementById('relevantCommunity').value,
-                digitalObjectType: document.getElementById('digitalObjectType').value
+                title: document.getElementById('algorithmName').value,
+                version: document.getElementById('algorithmVersion').value,
+                description: document.getElementById('algorithmDescription').value,
+                keyword: document.getElementById('algorithmKeywords').value,
+                abbreviation: document.getElementById('algorithmAbbreviation').value,
+                repository: document.getElementById('algorithmRepository').value,
+                type: document.getElementById('algorithmType').value,
+                license: document.getElementById('algorithmLicence').value,
+                applicationArea: document.getElementById('algorithmApplicationArea').value,
+                isApplicableFor: document.getElementById('algorithmApplicableFor').value,
+                isImplementationOf: document.getElementById('algorithmIsImplementationOf').value,
+                contactPoint: document.getElementById('algorithmContactPoint').value
             };
 
             const testReferences = collectItems('test-reference-item', ['id', 'guid', 'passWeight', 'failWeight', 'indeterminateWeight']);
@@ -798,10 +869,9 @@
         function exportToGoogleSheetFormat() {
             const data = exportToJSON();
             
-            let csvContent = "Property,Value\n";
+            let csvContent = "DCAT Property,Value\n";
             Object.entries(data.property).forEach(([key, value]) => {
-                const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                csvContent += `"${formattedKey}","${value}"\n`;
+                csvContent += `"${key}","${value}"\n`;
             });
             
             csvContent += "\nTest Reference,Test GUID,Pass Weight,Fail Weight,Indeterminate Weight\n";
@@ -817,116 +887,170 @@
             return csvContent;
         }
 
-        /**
-         * Enhanced version with more options
-         * @param {string} csvContent - The CSV content to convert to Excel
-         * @param {string} filename - The filename for the Excel file (without extension)
-         * @param {Object} options - Configuration options
-         */
-        function downloadExcelFromCSVAdvanced(csvContent, filename, options = {}) {
-            const {
-                sheetName = 'Sheet1',
-                hasHeaders = true,
-                delimiter = ',',
-                headerStyle = {
-                    font: { bold: true, color: { rgb: "FFFFFF" } },
-                    fill: { fgColor: { rgb: "4472C4" } },
-                    alignment: { horizontal: "center", vertical: "center" }
-                },
-                autoFilter = true,
-                freezeFirstRow = true
-            } = options;
+    // Main function with reduced complexity
+    function downloadExcelFromCSVAdvanced(csvContent, filename, options = {}) {
+        const config = getDefaultConfig(options);
+        
+        try {
+            const data = parseCSVContent(csvContent, config.delimiter);
+            const workbook = createWorkbook(data, config);
+            downloadWorkbook(workbook, filename);
+            
+            console.log(`Excel file "${filename}.xlsx" downloaded successfully`);
+            return true;
+            
+        } catch (error) {
+            handleError(error);
+            return false;
+        }
+    }
 
-            try {
-                // Use PapaParse for more robust CSV parsing if available
-                let data;
-                if (typeof Papa !== 'undefined') {
-                    const parsed = Papa.parse(csvContent, {
-                        delimiter: delimiter,
-                        skipEmptyLines: false,
-                        trimHeaders: true
-                    });
-                    data = parsed.data;
-                } else {
-                    // Fallback to simple parsing
-                    data = csvContent.split('\n')
-                        .filter(line => line.trim() !== '')
-                        .map(line => line.split(delimiter).map(cell => cell.replace(/(^"|"$)/g, '').trim()));
-                }
+    // Configuration helper
+    function getDefaultConfig(options) {
+        return {
+            sheetName: 'Sheet1',
+            hasHeaders: true,
+            delimiter: ',',
+            headerStyle: {
+                font: { bold: true, color: { rgb: "FFFFFF" } },
+                fill: { fgColor: { rgb: "4472C4" } },
+                alignment: { horizontal: "center", vertical: "center" }
+            },
+            autoFilter: true,
+            freezeFirstRow: true,
+            ...options
+        };
+}
 
-                const workbook = XLSX.utils.book_new();
-                const worksheet = XLSX.utils.aoa_to_sheet(data);
-                
-                // Apply styling if headers exist
-                if (hasHeaders && data.length > 0) {
-                    const range = XLSX.utils.decode_range(worksheet['!ref']);
-                    
-                    // Style header row
-                    for (let C = range.s.c; C <= range.e.c; ++C) {
-                        const headerCell = XLSX.utils.encode_cell({r: 0, c: C});
-                        if (worksheet[headerCell]) {
-                            worksheet[headerCell].s = headerStyle;
-                        }
-                    }
-                    
-                    // Add auto filter
-                    if (autoFilter) {
-                        worksheet['!autofilter'] = { ref: worksheet['!ref'] };
-                    }
-                    
-                    // Freeze first row
-                    if (freezeFirstRow) {
-                        worksheet['!freeze'] = { xSplit: 0, ySplit: 1 };
-                    }
-                }
-                
-                // Auto-size columns
-                const range = XLSX.utils.decode_range(worksheet['!ref']);
-                const colWidths = [];
-                for (let C = range.s.c; C <= range.e.c; ++C) {
-                    let maxWidth = 10;
-                    for (let R = range.s.r; R <= range.e.r; ++R) {
-                        const cellAddress = XLSX.utils.encode_cell({r: R, c: C});
-                        const cell = worksheet[cellAddress];
-                        if (cell && cell.v) {
-                            const cellLength = cell.v.toString().length;
-                            maxWidth = Math.max(maxWidth, cellLength);
-                        }
-                    }
-                    colWidths[C] = { width: Math.min(maxWidth + 2, 50) };
-                }
-                worksheet['!cols'] = colWidths;
-                
-                XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-                
-                const excelBuffer = XLSX.write(workbook, {
-                    bookType: 'xlsx',
-                    type: 'array',
-                    compression: true
-                });
-                
-                const blob = new Blob([excelBuffer], {
-                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                });
-                
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `${filename}.xlsx`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-                
-                console.log(`Excel file "${filename}.xlsx" downloaded successfully`);
-                return true;
-                
-            } catch (error) {
-                console.error('Error creating Excel file:', error);
-                alert('Error creating Excel file: ' + error.message);
-                return false;
+    // CSV parsing logic
+    function parseCSVContent(csvContent, delimiter) {
+        if (typeof Papa !== 'undefined') {
+            return parsWithPapaParse(csvContent, delimiter);
+        }
+        return parseWithFallback(csvContent, delimiter);
+    }
+
+    function parsWithPapaParse(csvContent, delimiter) {
+        const parsed = Papa.parse(csvContent, {
+            delimiter: delimiter,
+            skipEmptyLines: false,
+            trimHeaders: true
+        });
+        return parsed.data;
+    }
+
+    function parseWithFallback(csvContent, delimiter) {
+        return csvContent.split('\n')
+            .filter(line => line.trim() !== '')
+            .map(line => line.split(delimiter)
+                .map(cell => cell.replace(/(^"|"$)/g, '').trim()));
+    }
+
+    // Workbook creation and styling
+    function createWorkbook(data, config) {
+        const workbook = XLSX.utils.book_new();
+        const worksheet = XLSX.utils.aoa_to_sheet(data);
+        
+        if (shouldApplyStyling(data, config.hasHeaders)) {
+            applyWorksheetStyling(worksheet, config);
+        }
+        
+        applyColumnAutoSize(worksheet);
+        XLSX.utils.book_append_sheet(workbook, worksheet, config.sheetName);
+        
+        return workbook;
+    }
+
+    function shouldApplyStyling(data, hasHeaders) {
+        return hasHeaders && data.length > 0;
+    }
+
+    function applyWorksheetStyling(worksheet, config) {
+        applyHeaderStyling(worksheet, config.headerStyle);
+        
+        if (config.autoFilter) {
+            worksheet['!autofilter'] = { ref: worksheet['!ref'] };
+        }
+        
+        if (config.freezeFirstRow) {
+            worksheet['!freeze'] = { xSplit: 0, ySplit: 1 };
+        }
+    }
+
+    function applyHeaderStyling(worksheet, headerStyle) {
+        const range = XLSX.utils.decode_range(worksheet['!ref']);
+        
+        for (let col = range.s.c; col <= range.e.c; col++) {
+            const headerCell = XLSX.utils.encode_cell({ r: 0, c: col });
+            if (worksheet[headerCell]) {
+                worksheet[headerCell].s = headerStyle;
             }
         }
+    }
+
+    function applyColumnAutoSize(worksheet) {
+        const range = XLSX.utils.decode_range(worksheet['!ref']);
+        const colWidths = [];
+        
+        for (let col = range.s.c; col <= range.e.c; col++) {
+            const maxWidth = calculateColumnWidth(worksheet, range, col);
+            colWidths[col] = { width: Math.min(maxWidth + 2, 50) };
+        }
+        
+        worksheet['!cols'] = colWidths;
+    }
+
+    function calculateColumnWidth(worksheet, range, col) {
+        let maxWidth = 10;
+        
+        for (let row = range.s.r; row <= range.e.r; row++) {
+            const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+            const cell = worksheet[cellAddress];
+            
+            if (cell?.v) {
+                const cellLength = cell.v.toString().length;
+                maxWidth = Math.max(maxWidth, cellLength);
+            }
+        }
+        
+        return maxWidth;
+    }
+
+    // Download functionality
+    function downloadWorkbook(workbook, filename) {
+        const excelBuffer = XLSX.write(workbook, {
+            bookType: 'xlsx',
+            type: 'array',
+            compression: true
+        });
+        
+        const blob = createExcelBlob(excelBuffer);
+        triggerDownload(blob, filename);
+    }
+
+    function createExcelBlob(excelBuffer) {
+        return new Blob([excelBuffer], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
+    }
+
+    function triggerDownload(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        
+        link.href = url;
+        link.download = `${filename}.xlsx`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    // Error handling
+    function handleError(error) {
+        console.error('Error creating Excel file:', error);
+        alert('Error creating Excel file: ' + error.message);
+    }
 
         // Function to export to Excel with enhanced options
         function exportToExcel() {
