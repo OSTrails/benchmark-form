@@ -1,0 +1,21 @@
+DCAT Property,Value
+"title","Generic benchmark algorithm"
+"version","1.0"
+"description","Used in conjunction with FAIR Champion test runner to calculate FAIR scores."
+"keyword","FAIR, benchmark, algorithm"
+"abbreviation","FAIRalgorithm"
+"repository","https://docs.google.com/spreadsheets/d/16s2klErdtZck2b6i2Zp_PjrgpBBnnrBKaAvTwrnMB4w/edit?gid=0#gid=0"
+"type","http://ontology.ethereal.cz/irao/Benchmark"
+"license","http://creativecommons.org/publicdomain/zero/1.0/"
+"applicationArea","http://www.fairsharing.org/ontology/subject/SRAO_0000401"
+"isApplicableFor","https://schema.org/Dataset"
+"isImplementationOf","https://ostrails.github.io/sandbox/mockbenchmark1.ttl"
+"contactPoint","ann.none@nowhere.uk"
+
+Test Reference,Test GUID,Pass Weight,Fail Weight,Indeterminate Weight
+"T1","https://tests.ostrails.eu/tests/fc_unique_identifier",5,-1,0
+"T2","https://tests.ostrails.eu/tests/fc_searchable",5,-1,0
+
+Condition,Description,Formula,Success Message,Fail Message
+"C1","Metadata are assigned globally unique identifiers","T1 > 0","Acceptable: metadata are assigned globally unique identifiers","Unacceptable: metadata are not assigned globally unique identifiers"
+"C2","Metadata are assigned globally unique identifiers and are registered or indexed in a searchable resource","T1 + T2 == 10","Acceptable: both tests passed","Unacceptable: one or more tests failed"
