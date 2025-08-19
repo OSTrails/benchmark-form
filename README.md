@@ -27,13 +27,14 @@ Knowledge of HTML, and/or access to a drag and drop HTML editing tool.
 8. If exported in CSV format, import the generated CSV file into a Google Sheets file,
 otherwise upload the Excel file to Google Docs and open it with Google Sheets.
 9. Generate a link with for the spreadsheet with permissions 'Anyone on the Internet can edit' (see File->Share->Share with others)
-10. Open the [FAIR Champion Quality Assessment tool](https://tools.ostrails.eu/champion/assess/algorithm) and use the link
-in the Benchmark Configuration Spreadsheet URI field
+10. Open the [FAIR Champion Quality Assessment tool](https://tools.ostrails.eu/champion/assess/algorithms/new) and use the link
+in the Benchmark Configuration Spreadsheet URI field (spreadsheet must have been registered via
+[Register Benchmark Assessment Algorithm](https://tools.ostrails.eu/champion/algorithms/new))
 11. Enter the URL of a digital object to evaluate in the GUID field
 12. Press the Run Benchmark Quality Assessment button and wait for the results to be displayed
 
 There is an example of a completed form (CDC Benchmark Algorithm Editor.html)
-and a generated CSV file (cdc_benchmark_algorithm_2025-08-07.csv) in the example directory.
+and a generated CSV file (generic_benchmark_algorithm_2025-08-19.csv) in the example directory.
 
 ## Contributing
 
