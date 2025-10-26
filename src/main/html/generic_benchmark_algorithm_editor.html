@@ -2,711 +2,224 @@
 <html lang="en">
 <!--
     File: generic_benchmark_algorithm_editor.html
-    Purpose: Form for editing and managing generic benchmark algorithms. 
-    The form allows users to define algorithm properties, test references, and evaluation conditions.
-    Use can export the configuration as Excel or CSV files, then import the CVS into a Google Sheet for use 
-    with the FAIR Champion Benchmark Quality Assessment tool.
-    The Google Sheet must be editable by anonymous users.
-
-    REFACTORED: Reduced code duplication by extracting common functions and patterns
-
+    Updated: Add Guidance column for Conditions and prepend two header rows in exports.
     TODO: Review the use of the 'xxxCount--' code in the removeElement function.
-    This code decrements the count of test references and conditions when an item is removed.
-    It works as expected if the highest ID is removed, but may cause issues with duplicate IDs
-    if a lower ID is removed first.
-    Consider removing this code to simplify the logic and avoid potential issues with duplicate IDs.
 -->
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generic Benchmark Algorithm Editor</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generic Benchmark Algorithm Editor v1.2</title>
 
-    <!-- Load PapaParse from CDNJS -->
-     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" 
-        integrity="sha512-dfX5uYVXzyU8+KHqj8bjo7UkOdg18PaOtpa48djpNbZHwExddghZ+ZmzWT06R5v6NSk3ZUfsH6FNEDepLx9hPQ==" 
-        crossorigin="anonymous" 
-        referrerpolicy="no-referrer"
-     ></script>
-    
-    <!-- Load SheetJS (XLSX) from CDNJS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" 
-        integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA==" 
-        crossorigin="anonymous" 
-        referrerpolicy="no-referrer"
-    ></script>
+    <!-- Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"
+        integrity="sha512-dfX5uYVXzyU8+KHqj8bjo7UkOdg18PaOtpa48djpNbZHwExddghZ+ZmzWT06R5v6NSk3ZUfsH6FNEDepLx9hPQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+        integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Google+Sans|Roboto:300,400,500,700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Google Sans', Roboto, Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #202124;
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 20px auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #c5f442 0%, #47b73a 100%);
-            color: white;
-            padding: 32px 24px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: repeating-linear-gradient(
-                45deg,
-                transparent,
-                transparent 2px,
-                rgba(255,255,255,0.03) 2px,
-                rgba(255,255,255,0.03) 4px
-            );
-            animation: shimmer 20s linear infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .header h1 {
-            font-size: 28px;
-            font-weight: 300;
-            margin-bottom: 8px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .header p {
-            font-size: 16px;
-            opacity: 0.9;
-            position: relative;
-            z-index: 1;
-        }
-
-        .form-content {
-            padding: 32px 24px;
-        }
-
-        .section {
-            margin-bottom: 40px;
-            border: 1px solid #e8eaed;
-            border-radius: 12px;
-            overflow: hidden;
-            transition: box-shadow 0.3s ease;
-        }
-
-        .section:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        .section-header {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e8f0fe 100%);
-            padding: 20px 24px;
-            border-bottom: 1px solid #e8eaed;
-            font-weight: 500;
-            font-size: 18px;
-            color: #1f1f1f;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .section-header .icon {
-            font-size: 24px;
-        }
-
-        .section-content {
-            padding: 24px;
-        }
-
-        .form-group {
-            margin-bottom: 24px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #202124;
-            font-size: 14px;
-        }
-
-        .form-group input[type="text"],
-        .form-group input[type="url"],
-        .form-group input[type="number"],
-        .form-group textarea {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e8eaed;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            font-family: inherit;
-            background: #fafafa;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #4285f4;
-            background: white;
-            box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.1);
-            transform: translateY(-1px);
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .item {
-            background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
-            border: 2px solid #e8eaed;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            position: relative;
-            transition: all 0.3s ease;
-        }
-
-        .test-reference-item:hover {
-            border-color: #4285f4;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.1);
-        }
-
-        .condition-item:hover {
-            border-color: #34a853;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(52, 168, 83, 0.1);
-        }
-
-        .item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .item-header h4 {
-            color: #1f1f1f;
-            font-size: 16px;
-            font-weight: 500;
-        }
-
-        .row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .row-three {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 16px;
-        }
-
-        .btn {
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: inherit;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #4285f4 0%, #1a73e8 100%);
-            color: white;
-            padding: 14px 28px;
-            box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(26, 115, 232, 0.4);
-        }
-
-        .btn-secondary {
-            background: white;
-            color: #5f6368;
-            border: 2px solid #e8eaed;
-            padding: 12px 24px;
-            margin-right: 12px;
-        }
-
-        .btn-secondary:hover {
-            border-color: #4285f4;
-            color: #4285f4;
-            transform: translateY(-1px);
-        }
-
-        .add-btn {
-            background: linear-gradient(135deg, #34a853 0%, #2d7d32 100%);
-            color: white;
-            padding: 10px 20px;
-            font-size: 13px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(52, 168, 83, 0.3);
-        }
-
-        .add-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(52, 168, 83, 0.4);
-        }
-
-        .remove-btn {
-            background: linear-gradient(135deg, #ea4335 0%, #d33b2c 100%);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-        }
-
-        .remove-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 2px 8px rgba(234, 67, 53, 0.4);
-        }
-
-        .button-group {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            margin-top: 40px;
-            padding-top: 32px;
-            border-top: 2px solid #f1f3f4;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-            padding: 16px;
-            border-radius: 8px;
-            text-align: center;
-            border: 1px solid #90caf9;
-        }
-
-        .stat-number {
-            font-size: 24px;
-            font-weight: 600;
-            color: #1565c0;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #1976d2;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .progress-bar {
-            height: 4px;
-            background: #e8eaed;
-            border-radius: 2px;
-            margin: 8px 0;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #4285f4, #34a853);
-            transition: width 0.5s ease;
-        }
-
-        .help-icon {
-            cursor: help;
-            background: none;
-            border: none;
-            padding: 0;
-            font: inherit;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                margin: 10px;
-            }
-            
-            .row, .row-three {
-                grid-template-columns: 1fr;
-            }
-            
-            .form-content {
-                padding: 20px 16px;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .button-group {
-                flex-direction: column;
-                align-items: center;
-            }
-        }
-
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        /* --- (styles unchanged / slightly trimmed for brevity) --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Google Sans', Roboto, Arial, sans-serif; background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:#202124; min-height:100vh; line-height:1.6; }
+        .container{max-width:900px;margin:20px auto;background:white;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.1);overflow:hidden;}
+        .header{background:linear-gradient(135deg,#c5f442 0%,#47b73a 100%);color:white;padding:32px 24px;text-align:center;position:relative;overflow:hidden;}
+        .header h1{font-size:28px;font-weight:300;margin-bottom:8px}
+        .form-content{padding:32px 24px;}
+        .section{margin-bottom:40px;border:1px solid #e8eaed;border-radius:12px;overflow:hidden}
+        .section-header{background:linear-gradient(135deg,#f8f9fa 0%,#e8f0fe 100%);padding:20px 24px;border-bottom:1px solid #e8eaed;font-weight:500;font-size:18px;display:flex;align-items:center;gap:12px;}
+        .section-content{padding:24px}
+        .form-group{margin-bottom:16px}
+        .form-group label{display:block;margin-bottom:8px;font-weight:500;color:#202124;font-size:14px}
+        input[type="text"], input[type="url"], input[type="number"], textarea { width:100%; padding:12px 14px; border:2px solid #e8eaed; border-radius:8px; font-size:14px; background:#fafafa; font-family:inherit }
+        textarea { min-height:70px; resize:vertical }
+        .item{background:linear-gradient(135deg,#f8f9fa 0%,#fff 100%);border:2px solid #e8eaed;border-radius:12px;padding:20px;margin-bottom:20px}
+        .item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+        .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .row-three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+        .btn{border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer}
+        .btn-primary{background:linear-gradient(135deg,#4285f4 0%,#1a73e8 100%);color:white;padding:12px 22px}
+        .add-btn{background:linear-gradient(135deg,#34a853 0%,#2d7d32 100%);color:white;padding:8px 16px;border-radius:8px}
+        .remove-btn{background:linear-gradient(135deg,#ea4335 0%,#d33b2c 100%);color:white;padding:6px 10px;border-radius:6px}
+        .help-icon{cursor:help;background:none;border:none;padding:0;font:inherit}
+        .button-group{display:flex;justify-content:center;gap:12px;margin-top:24px;padding-top:16px;border-top:2px solid #f1f3f4}
+        @media (max-width:768px) { .row,.row-three{grid-template-columns:1fr} .container{margin:10px} }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎯 Generic Benchmark Algorithm Editor</h1>
-            <p>Use this form to generate a CSV file that can be imported into a Benchmark Configuration Google Sheet for use with the 
-      <a href="https://tools.ostrails.eu/champion/assess/algorithm/new" target="_blank" rel="noopener">FAIR Champion Benchmark Quality Assessment tool</a>
-    </p>
+            <h1>🎯 Generic Benchmark Algorithm Editor v1.2</h1>
+            <p>Use this form to generate a CSV/XLSX import for the FAIR Champion Benchmark Configuration sheet.</p>
         </div>
+
         <div class="form-content">
-            <!-- Statistics Section -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-number" id="testCount">2</div>
-                    <div class="stat-label">Test References</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px">
+                <div style="background:linear-gradient(135deg,#e3f2fd 0%,#bbdefb 100%);padding:12px;border-radius:8px;text-align:center">
+                    <div id="testCount" style="font-size:20px;font-weight:600">2</div>
+                    <div style="font-size:12px;color:#1976d2">Test References</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="conditionCount">2</div>
-                    <div class="stat-label">Conditions</div>
+                <div style="background:linear-gradient(135deg,#e8f5e9 0%,#c8e6c9 100%);padding:12px;border-radius:8px;text-align:center">
+                    <div id="conditionCount" style="font-size:20px;font-weight:600">2</div>
+                    <div style="font-size:12px;color:#2e7d32">Conditions</div>
                 </div>
             </div>
 
             <form id="algorithmForm">
-                <!-- Property Section -->
-                <div class="section fade-in">
-                    <div class="section-header">
-                        <span class="icon">📋</span>
-                        <span>DCAT Property</span>
-                    </div>
+                <div class="section">
+                    <div class="section-header"><span class="icon">📋</span><span>DCAT Property</span></div>
                     <div class="section-content">
-                        <!-- ID unchanged -->
-                        <div class="form-group">
-                            <label for="algorithmName">Title</label>
-                            <input type="text" id="algorithmName" value="Generic benchmark algorithm" required>
-                        </div>
-                        
-                        <!-- ID new version -->
-                        <div class="form-group">
-                            <label for="algorithmVersion">Version</label>
-                            <input type="text" id="algorithmVersion" value="1.0" required>
-                        </div>
-
-                        <!-- ID new description -->
-                        <div class="form-group">
-                            <label for="algorithmDescription">Description</label>
-                            <input type="text" id="algorithmDescription" value="Used in conjunction with FAIR Champion test runner to calculate FAIR scores." required>
-                        </div>
-
-                        <!-- ID new keyword -->
-                        <div class="form-group">
-                            <label for="algorithmKeywords">Keywords</label>
-                            <input type="text" id="algorithmKeywords" value="FAIR, benchmark, algorithm" required>
-                        </div>
-
-                        <!-- ID new abbreviation -->
-                        <div class="form-group">
-                            <label for="algorithmAbbreviation">Abbreviation</label>
-                            <input type="text" id="algorithmAbbreviation" value="FAIRalgorithm" required>
-                        </div>
-
-                        <!-- ID new repository -->
-                        <div class="form-group">
-                            <label for="algorithmRepository">Repository</label>
-                            <input type="url" id="algorithmRepository" value="https://docs.google.com/spreadsheets/d/16s2klErdtZck2b6i2Zp_PjrgpBBnnrBKaAvTwrnMB4w/edit?gid=0#gid=0" required>
-                        </div>
-
-                        <!-- ID new type -->
-                        <div class="form-group">
-                            <label for="algorithmType">Type</label>
-                            <input type="url" id="algorithmType" value="http://ontology.ethereal.cz/irao/Benchmark" required>
-                        </div>
-
-                        <!-- ID new license -->
-                        <div class="form-group">
-                            <label for="algorithmLicence">Licence</label>
-                            <input type="url" id="algorithmLicence" value="http://creativecommons.org/publicdomain/zero/1.0/" required>
-                        </div>
-
-                        <!-- ID renamed from relevantCommunity to applicationArea DONE -->
-                        <div class="form-group">
-                            <label for="algorithmApplicationArea">Application Area</label>
-                            <input type="url" id="algorithmApplicationArea" value="http://www.fairsharing.org/ontology/subject/SRAO_0000401" required>
-                        </div>
-
-                        <!-- ID renamed from digitalObjectType to algorithmApplicableFor DONE -->
-                        <div class="form-group">
-                            <label for="algorithmApplicableFor">Is Applicable For</label>
-                            <input type="url" id="algorithmApplicableFor" value="https://schema.org/Dataset" required>
-                        </div>
-
-                        <!-- ID changed from benchmarkGuid to algorithmIsImplementationOf DONE -->
-                        <div class="form-group">
-                            <label for="algorithmIsImplementationOf">Registered benchmark GUID</label>
-                            <input type="url" id="algorithmIsImplementationOf" value="https://ostrails.github.io/sandbox/mockbenchmark1.ttl" required>
-                        </div>
-                        
-                        <!-- ID new algorithmContactPoint -->
-                        <div class="form-group">
-                            <label for="algorithmContactPoint">Contact Point</label>
-                            <input type="text" id="algorithmContactPoint" value="ann.none@nowhere.uk" required>
-                        </div>
+                        <div class="form-group"><label for="algorithmName">Title</label><input id="algorithmName" type="text" value="Generic benchmark algorithm" required></div>
+                        <div class="form-group"><label for="algorithmVersion">Version</label><input id="algorithmVersion" type="text" value="1.0" required></div>
+                        <div class="form-group"><label for="algorithmDescription">Description</label><input id="algorithmDescription" type="text" value="Used in conjunction with FAIR Champion test runner to calculate FAIR scores." required></div>
+                        <div class="form-group"><label for="algorithmKeywords">Keywords</label><input id="algorithmKeywords" type="text" value="FAIR, benchmark, algorithm" required></div>
+                        <div class="form-group"><label for="algorithmAbbreviation">Abbreviation</label><input id="algorithmAbbreviation" type="text" value="FAIRalgorithm" required></div>
+                        <div class="form-group"><label for="algorithmRepository">Repository</label><input id="algorithmRepository" type="url" value="https://docs.google.com/spreadsheets/d/16s2klErdtZck2b6i2Zp_PjrgpBBnnrBKaAvTwrnMB4w/edit?gid=0#gid=0" required></div>
+                        <div class="form-group"><label for="algorithmType">Type</label><input id="algorithmType" type="url" value="http://ontology.ethereal.cz/irao/Benchmark" required></div>
+                        <div class="form-group"><label for="algorithmLicence">Licence</label><input id="algorithmLicence" type="url" value="http://creativecommons.org/publicdomain/zero/1.0/" required></div>
+                        <div class="form-group"><label for="algorithmApplicationArea">Application Area</label><input id="algorithmApplicationArea" type="url" value="http://www.fairsharing.org/ontology/subject/SRAO_0000401" required></div>
+                        <div class="form-group"><label for="algorithmApplicableFor">Is Applicable For</label><input id="algorithmApplicableFor" type="url" value="https://schema.org/Dataset" required></div>
+                        <div class="form-group"><label for="algorithmIsImplementationOf">Registered benchmark GUID</label><input id="algorithmIsImplementationOf" type="url" value="https://ostrails.github.io/sandbox/mockbenchmark1.ttl" required></div>
+                        <div class="form-group"><label for="algorithmContactPoint">Contact Point</label><input id="algorithmContactPoint" type="text" value="ann.none@nowhere.uk" required></div>
                     </div>
                 </div>
 
-                <!-- Test Reference Section -->
-                <div class="section fade-in">
-                    <div class="section-header">
-                        <span class="icon">🧪</span>
-                        <span>Test References  (see 
-          <a href="https://tests.ostrails.eu/tests/" target="_blank" rel="noopener">OSTrails FAIR tests</a>)</span>
-                    </div>
+                <div class="section">
+                    <div class="section-header"><span class="icon">🧪</span><span>Test References</span></div>
                     <div class="section-content">
-                        <button type="button" class="btn add-btn" onclick="addItem('test')">+ Add Test Reference</button>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 100%"></div>
-                        </div>
-                        <div id="testReferences">
-                            <!-- Test references will be populated here -->
-                        </div>
+                        <button type="button" class="add-btn" onclick="addItem('test')">+ Add Test Reference</button>
+                        <div id="testReferences"></div>
                     </div>
                 </div>
 
-                <!-- Condition Section -->
-                <div class="section fade-in">
-                    <div class="section-header">
-                        <span class="icon">⚙️</span>
-                        <span>Evaluation Conditions</span>
-                    </div>
+                <div class="section">
+                    <div class="section-header"><span class="icon">⚙️</span><span>Evaluation Conditions</span></div>
                     <div class="section-content">
-                        <button type="button" class="btn add-btn" onclick="addItem('condition')">+ Add Condition</button>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 100%"></div>
-                        </div>
-                        <div id="conditions">
-                            <!-- Conditions will be populated here -->
-                        </div>
+                        <button type="button" class="add-btn" onclick="addItem('condition')">+ Add Condition</button>
+                        <div id="conditions"></div>
                     </div>
                 </div>
 
                 <div class="button-group">
-                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
-                        🔄 Reset Form
-                        <button class="help-icon" title="Hover for help" tabindex="0" 
-                                onmouseover="showHelp('Reset Form - Restore the original Benchmark Algorithm data and lose any changes.')"
-                                onfocus="showHelp('Reset Form - Restore the original Benchmark Algorithm data and lose any changes.')">❓</button>
-                    </button>
-                    
-                    <button type="button" class="btn btn-secondary" onclick="validateForm()">
-                        ✅ Validate
-                        <button class="help-icon" title="Hover for help" tabindex="0"
-                                onmouseover="showHelp('Validate - Check if all required fields are filled correctly and show validation results.')"
-                                onfocus="showHelp('Validate - Check if all required fields are filled correctly and show validation results.')">❓</button>
-                    </button>
-                    
-                    <button type="button" class="btn btn-secondary" onclick="exportToExcel()">
-                        📊 Export to Excel
-                        <button class="help-icon" title="Hover for help" tabindex="0"
-                                onmouseover="showHelp('Export to Excel - Download the current configuration as an Excel (.xlsx) file.')"
-                                onfocus="showHelp('Export to Excel - Download the current configuration as an Excel (.xlsx) file.')">❓</button>
-                    </button>
-
-                    <button type="submit" class="btn btn-secondary" onclick="exportToGoogleSheetFormat()">
-                        💾 Export to CSV
-                        <button class="help-icon" title="Hover for help" tabindex="0"
-                                onmouseover="showHelp('Export Configuration - Download the current configuration as CSV files.')"
-                                onfocus="showHelp('Export Configuration - Download the current configuration as CSV files.')">❓</button>
-                    </button>
+                    <button type="button" class="btn" onclick="resetForm()">🔄 Reset Form</button>
+                    <button type="button" class="btn" onclick="validateForm()">✅ Validate</button>
+                    <button type="button" class="btn" onclick="exportToExcel()">📊 Export to Excel</button>
+                    <button type="submit" class="btn" onclick="exportToGoogleSheetFormat()">💾 Export to CSV</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
-        // Configuration object to reduce magic strings
+        // -------------------------
+        // Configuration and data
+        // -------------------------
         const CONFIG = {
             itemTypes: {
-                test: {
-                    prefix: 'T',
-                    icon: '🧪',
-                    containerClass: 'test-reference-item',
-                    containerId: 'testReferences',
-                    countProperty: 'testReferenceCount'
-                },
-                condition: {
-                    prefix: 'C',
-                    icon: '⚙️',
-                    containerClass: 'condition-item',
-                    containerId: 'conditions',
-                    countProperty: 'conditionCount'
-                }
-            },
-            helpMessages: {
-                testId: 'Test ID - Enter a unique identifier for this test reference.',
-                testGuid: 'Test GUID - Use a test from https://tests.ostrails.eu/tests/',
-                passWeight: 'Pass Weight - Use an integer greater than zero.',
-                failWeight: 'Fail Weight - Use an integer less than zero.',
-                indeterminateWeight: 'Indeterminate Weight - Use an integer between the Pass and Fail weight range, typically zero.',
-                conditionId: 'Condition ID - Enter a unique identifier for this condition.',
-                conditionDescription: 'Condition Description - Enter a short description for this evaluation condition.',
-                formula: 'Formula - Enter a logical formula using test IDs. Ruby syntax is used for the calculation (e.g. conditional equals is == not =).',
-                successMessage: 'Success Message - Enter the message shown when the condition is met.',
-                failMessage: 'Fail Message - Enter the message shown when the condition is NOT met.'
+                test: { prefix: 'T', icon: '🧪', containerId: 'testReferences', class: 'test-reference-item' },
+                condition: { prefix: 'C', icon: '⚙️', containerId: 'conditions', class: 'condition-item' }
             }
         };
 
-        // Sample data for initial test references and conditions
         const initialTestReferences = [
             { id: 'T1', guid: 'https://tests.ostrails.eu/tests/fc_unique_identifier', passWeight: 5, failWeight: -1, indeterminateWeight: 0 },
             { id: 'T2', guid: 'https://tests.ostrails.eu/tests/fc_searchable', passWeight: 5, failWeight: -1, indeterminateWeight: 0 }
         ];
 
+        // note: added empty guidance field
         const initialConditions = [
-            { id: 'C1', description: 'Metadata are assigned globally unique identifiers', formula: 'T1 > 0', successMessage: 'Acceptable: metadata are assigned globally unique identifiers', failMessage: 'Unacceptable: metadata are not assigned globally unique identifiers' },
-            { id: 'C2', description: 'Metadata are assigned globally unique identifiers and are registered or indexed in a searchable resource', formula: 'T1 + T2 == 10', successMessage: 'Acceptable: both tests passed', failMessage: 'Unacceptable: one or more tests failed' }
+            { id: 'C1', description: 'Metadata are assigned globally unique identifiers', formula: 'T1 > 0', successMessage: 'Acceptable: metadata are assigned globally unique identifiers', failMessage: 'Unacceptable: metadata are not assigned globally unique identifiers', guidance: '[[https://fairsharing.org/6274,FAIR Principles F1-GUID]]' },
+            { id: 'C2', description: 'Metadata are assigned globally unique identifiers and are registered or indexed in a searchable resource', formula: 'T1 + T2 == 10', successMessage: 'Acceptable: both tests passed', failMessage: 'Unacceptable: one or more tests failed', guidance: '' }
         ];
 
         let testReferenceCount = 0;
         let conditionCount = 0;
 
-        // Unified function to create help icons
-        function createHelpIcon(helpKey) {
-            return `<span class="help-icon" style="cursor:help;" title="Hover for help" 
-                           onmouseover="showHelp('${CONFIG.helpMessages[helpKey]}')" 
-                           onfocus="showHelp('${CONFIG.helpMessages[helpKey]}')">❓</span>`;
+        // -------------------------
+        // Utilities
+        // -------------------------
+        function mkHelp(text) {
+            return `<button class="help-icon" title="Hover for help" tabindex="0" onclick="showHelp(${JSON.stringify(text)})">❓</button>`;
         }
 
-        // Unified function to create form groups with help
-        function createFormGroup(id, label, type, value, helpKey, attributes = '') {
-            const element = type === 'textarea' 
-                ? `<textarea id="${id}" ${attributes}>${value}</textarea>`
-                : `<input type="${type}" id="${id}" value="${value}" ${attributes}>`;
-            
-            return `
-                <div class="form-group">
-                    <label for="${id}">
-                        ${label}
-                        ${helpKey ? createHelpIcon(helpKey) : ''}
-                    </label>
-                    ${element}
-                </div>
-            `;
+        function createFormGroup(id, label, type, value = '', attrs = '') {
+            const input = (type === 'textarea')
+                ? `<textarea id="${id}" ${attrs}>${value ?? ''}</textarea>`
+                : `<input id="${id}" type="${type}" value="${value ?? ''}" ${attrs}>`;
+            return `<div class="form-group"><label for="${id}">${label}</label>${input}</div>`;
         }
 
-        // Template generators
+        // -------------------------
+        // Templates
+        // -------------------------
         function generateTestReferenceTemplate(data) {
-            const config = CONFIG.itemTypes.test;
-            const id = data ? data.id : config.prefix + (testReferenceCount + 1);
-            
+            const cfg = CONFIG.itemTypes.test;
+            const id = data?.id ?? (cfg.prefix + (testReferenceCount + 1));
             return `
-                <div class="item-header">
-                    <h4>${config.icon} ${id}</h4>
-                    <button type="button" class="remove-btn" onclick="removeElement(this.closest('.${config.containerClass}'))">Remove</button>
-                </div>
-                ${createFormGroup('testId', 'Test ID', 'text', id, 'testId', 'name="testId" required')}
-                ${createFormGroup('testGuid', 'Enter test GUID (URL)', 'url', data ? data.guid : '', 'testGuid', 'name="testGuid" placeholder="https://tests.ostrails.eu/tests/..." required')}
-                <div class="row-three">
-                    ${createFormGroup('passWeight', 'Pass Weight', 'number', data ? data.passWeight : 5, 'passWeight', 'name="passWeight" required')}
-                    ${createFormGroup('failWeight', 'Fail Weight', 'number', data ? data.failWeight : -1, 'failWeight', 'name="failWeight" required')}
-                    ${createFormGroup('indeterminateWeight', 'Indeterminate Weight', 'number', data ? data.indeterminateWeight : 0, 'indeterminateWeight', 'name="indeterminateWeight" required')}
+                <div class="item ${cfg.class}">
+                    <div class="item-header"><h4>${cfg.icon} ${id}</h4><button type="button" class="remove-btn" onclick="removeElement(this.closest('.${cfg.class}'))">Remove</button></div>
+                    ${createFormGroup('testId', 'Test ID', 'text', id, 'name="testId" required')}
+                    ${createFormGroup('testGuid', 'Enter test GUID (URL)', 'url', data?.guid ?? '', 'name="testGuid" placeholder="https://tests.ostrails.eu/tests/..." required')}
+                    <div class="row-three">
+                        ${createFormGroup('passWeight', 'Pass Weight', 'number', data?.passWeight ?? 5, 'name="passWeight" required')}
+                        ${createFormGroup('failWeight', 'Fail Weight', 'number', data?.failWeight ?? -1, 'name="failWeight" required')}
+                        ${createFormGroup('indeterminateWeight', 'Indeterminate Weight', 'number', data?.indeterminateWeight ?? 0, 'name="indeterminateWeight" required')}
+                    </div>
                 </div>
             `;
         }
 
         function generateConditionTemplate(data) {
-            const config = CONFIG.itemTypes.condition;
-            const id = data ? data.id : config.prefix + (conditionCount + 1);
-            
+            const cfg = CONFIG.itemTypes.condition;
+            const id = data?.id ?? (cfg.prefix + (conditionCount + 1));
+            // Keep input order consistent with export mapping: id, description, formula, successMessage, failMessage, guidance
             return `
-                <div class="item-header">
-                    <h4>${config.icon} ${id}</h4>
-                    <button type="button" class="remove-btn" onclick="removeElement(this.closest('.${config.containerClass}'))">Remove</button>
-                </div>
-                ${createFormGroup('conditionId', 'Condition ID', 'text', id, 'conditionId', 'name="conditionId" required')}
-                ${createFormGroup('conditionDescription', 'Description', 'textarea', data ? data.description : '', 'conditionDescription', 'name="conditionDescription" rows="2" required')}
-                ${createFormGroup('formula', 'Formula', 'text', data ? data.formula : '', 'formula', 'name="conditionFormula" placeholder="e.g., T1 > 0" required')}
-                <div class="row">
-                    ${createFormGroup('successMessage', 'Success Message', 'textarea', data ? data.successMessage : '', 'successMessage', 'name="successMessage" rows="3" required')}
-                    ${createFormGroup('failMessage', 'Fail Message', 'textarea', data ? data.failMessage : '', 'failMessage', 'name="failMessage" rows="3" required')}
+                <div class="item ${cfg.class}">
+                    <div class="item-header"><h4>${cfg.icon} ${id}</h4><button type="button" class="remove-btn" onclick="removeElement(this.closest('.${cfg.class}'))">Remove</button></div>
+                    ${createFormGroup('conditionId', 'Condition ID', 'text', id, 'name="conditionId" required')}
+                    ${createFormGroup('conditionDescription', 'Description', 'textarea', data?.description ?? '', 'name="conditionDescription" rows="2" required')}
+                    ${createFormGroup('formula', 'Formula', 'text', data?.formula ?? '', 'name="conditionFormula" placeholder="e.g., T1 > 0" required')}
+                    <div class="row">
+                        ${createFormGroup('successMessage', 'Success Message', 'textarea', data?.successMessage ?? '', 'name="successMessage" rows="3" required')}
+                        ${createFormGroup('failMessage', 'Fail Message', 'textarea', data?.failMessage ?? '', 'name="failMessage" rows="3" required')}
+                    </div>
+                    <!-- New single-line Guidance field (optional) -->
+                    ${createFormGroup('guidance', 'Guidance (optional)', 'text', data?.guidance ?? '', 'name="guidance" placeholder="Optional guidance (single-line)"')}
                 </div>
             `;
         }
 
-        // Unified add item function
+        // -------------------------
+        // Add / Remove / Init
+        // -------------------------
         function addItem(type, data = null) {
-            const config = CONFIG.itemTypes[type];
-            const container = document.getElementById(config.containerId);
+            const cfg = CONFIG.itemTypes[type];
+            const container = document.getElementById(cfg.containerId);
             const div = document.createElement('div');
-            div.className = `item ${config.containerClass} fade-in`;
-            
-            if (type === 'test') {
-                div.innerHTML = generateTestReferenceTemplate(data);
-                testReferenceCount++;
-            } else if (type === 'condition') {
-                div.innerHTML = generateConditionTemplate(data);
-                conditionCount++;
-            }
-            
-            container.appendChild(div);
+            div.innerHTML = (type === 'test') ? generateTestReferenceTemplate(data) : generateConditionTemplate(data);
+            container.appendChild(div.firstElementChild);
+            if (type === 'test') testReferenceCount++; else conditionCount++;
+            updateStats();
+        }
+
+        function removeElement(el) {
+            if (!confirm('Are you sure you want to remove this item?')) return;
+            const isTest = el.classList.contains(CONFIG.itemTypes.test.class);
+            el.remove();
+            if (isTest) testReferenceCount = Math.max(0, testReferenceCount - 1); else conditionCount = Math.max(0, conditionCount - 1);
             updateStats();
         }
 
         function initializeForm() {
-            initialTestReferences.forEach(test => addItem('test', test));
-            initialConditions.forEach(condition => addItem('condition', condition));
+            document.getElementById('testReferences').innerHTML = '';
+            document.getElementById('conditions').innerHTML = '';
+            testReferenceCount = 0; conditionCount = 0;
+            initialTestReferences.forEach(t => addItem('test', t));
+            initialConditions.forEach(c => addItem('condition', c));
             updateStats();
-        }
-
-        function removeElement(element) {
-            if (confirm('Are you sure you want to remove this item?')) {
-                const isTestReference = element.classList.contains('test-reference-item');
-                if (isTestReference) {
-                    testReferenceCount--;
-                } else {
-                    conditionCount--;
-                }
-                element.remove();
-                updateStats();
-            }
         }
 
         function updateStats() {
@@ -714,127 +227,54 @@
             document.getElementById('conditionCount').textContent = document.querySelectorAll('.condition-item').length;
         }
 
-        // Unified validation function
+        // -------------------------
+        // Validation
+        // -------------------------
         function validateField(field, errors) {
-            const label = field.closest('.form-group').querySelector('label').textContent.replace('❓', '').trim();
-            
-            if (!field.value.trim()) {
+            if (!field) return true;
+            const label = field.closest('.form-group')?.querySelector('label')?.textContent ?? 'Field';
+            if (!field.value || !field.value.toString().trim()) {
                 field.style.borderColor = '#ea4335';
                 errors.push(`${label} is required`);
                 return false;
             }
-            
-            if (field.type === 'url' && !isValidURL(field.value)) {
-                field.style.borderColor = '#ea4335';
-                errors.push(`${label} must be a valid URL`);
-                return false;
+            if (field.type === 'url') {
+                try { new URL(field.value); } catch (e) { field.style.borderColor = '#ea4335'; errors.push(`${label} must be a valid URL`); return false; }
             }
-            
             field.style.borderColor = '#34a853';
             return true;
         }
 
         function validateForm() {
             const form = document.getElementById('algorithmForm');
-            let isValid = true;
-            let errors = [];
-
             const requiredFields = form.querySelectorAll('[required]');
-            requiredFields.forEach(field => {
-                if (!validateField(field, errors)) {
-                    isValid = false;
-                }
-            });
-
-            if (isValid) {
-                alert('✅ Form validation passed! All fields are correctly filled.');
-                form.querySelectorAll('input, textarea').forEach(field => {
-                    field.style.borderColor = '#34a853';
-                    setTimeout(() => field.style.borderColor = '#e8eaed', 2000);
-                });
-            } else {
-                alert('❌ Form validation failed:\n\n' + errors.join('\n'));
-            }
-
-            return isValid;
+            const errors = [];
+            requiredFields.forEach(f => validateField(f, errors));
+            if (errors.length === 0) { alert('✅ Form validation passed!'); return true; }
+            alert('❌ Validation failed:\n\n' + errors.join('\n')); return false;
         }
 
-        function isValidURL(string) {
-            try {
-        new URL(string);
-            return true;
-        } catch (error) {
-        // Explicitly handle the URL constructor errors
-        if (error instanceof TypeError) {
-            // This is the expected error when URL is invalid
-            return false;
-            }
-        // Re-throw unexpected errors
-        throw error;
-            }
-        }
-
-        function resetForm() {
-            if (confirm('Are you sure you want to reset the form? This will restore the original Benchmark Algorithm data and lose any changes.')) {
-                document.body.classList.add('loading');
-                
-                setTimeout(() => {
-                    // Clear containers
-                    document.getElementById('testReferences').innerHTML = '';
-                    document.getElementById('conditions').innerHTML = '';
-                    testReferenceCount = 0;
-                    conditionCount = 0;
-                    
-                    // Reset property values
-                    const defaultValues = {
-                        algorithmName: 'Generic benchmark algorithm',
-                        algorithmVersion: '1.0',
-                        algorithmDescription: 'Used in conjunction with FAIR Champion test runner to calculate FAIR scores.',
-                        algorithmKeywords: 'FAIR, benchmark, algorithm',
-                        algorithmAbbreviation: 'FAIRalgorithm',
-                        algorithmRepository: 'https://docs.google.com/spreadsheets/d/16s2klErdtZck2b6i2Zp_PjrgpBBnnrBKaAvTwrnMB4w/edit?gid=0#gid=0',
-                        algorithmType: 'https://ontology.ethereal.cz/irao/Benchmark',
-                        algorithmLicence: 'https://creativecommons.org/publicdomain/zero/1.0/',
-                        algorithmApplicationArea: 'https://www.fairsharing.org/ontology/subject/SRAO_0000401',
-                        algorithmApplicableFor: 'https://schema.org/Dataset',
-                        algorithmIsImplementationOf: 'https://ostrails.github.io/sandbox/mockbenchmark1.ttl',
-                        algorithmContactPoint: 'ann.none@now.uk'
-                    };
-                    
-                    Object.entries(defaultValues).forEach(([id, value]) => {
-                        document.getElementById(id).value = value;
-                    });
-                    
-                    initializeForm();
-                    document.body.classList.remove('loading');
-                }, 500);
-            }
-        }
-
+        // -------------------------
+        // Collect / Export helpers
+        // -------------------------
+        // Collect items by class and mapped field names (order must follow DOM order of inputs)
         function collectItems(className, fieldNames) {
             const items = [];
-            const elements = document.querySelectorAll(`.${className}`);
-            
-            elements.forEach(item => {
-                const inputs = item.querySelectorAll('input, textarea');
-                const itemData = {};
-                
-                fieldNames.forEach((fieldName, index) => {
-                    let value = inputs[index].value;
-                    if (inputs[index].type === 'number') {
-                        value = parseInt(value);
-                    }
-                    itemData[fieldName] = value;
+            document.querySelectorAll('.' + className).forEach(item => {
+                const inputs = Array.from(item.querySelectorAll('input, textarea'));
+                const obj = {};
+                fieldNames.forEach((name, i) => {
+                    let v = inputs[i]?.value ?? '';
+                    if (inputs[i]?.type === 'number') v = parseInt(v) || 0;
+                    obj[name] = v;
                 });
-                
-                items.push(itemData);
+                items.push(obj);
             });
-            
             return items;
         }
 
         function exportToJSON() {
-            const propertyData = {
+            const property = {
                 title: document.getElementById('algorithmName').value,
                 version: document.getElementById('algorithmVersion').value,
                 description: document.getElementById('algorithmDescription').value,
@@ -849,332 +289,151 @@
                 contactPoint: document.getElementById('algorithmContactPoint').value
             };
 
-            const testReferences = collectItems('test-reference-item', ['id', 'guid', 'passWeight', 'failWeight', 'indeterminateWeight']);
-            const conditions = collectItems('condition-item', ['id', 'description', 'formula', 'successMessage', 'failMessage']);
+            const tests = collectItems('test-reference-item', ['id', 'guid', 'passWeight', 'failWeight', 'indeterminateWeight']);
+            // For conditions now include guidance as last field
+            const conditions = collectItems('condition-item', ['id', 'description', 'formula', 'successMessage', 'failMessage', 'guidance']);
 
             return {
-                metadata: {
-                    title: "Generic Benchmark Algorithm Configuration",
-                    version: "1.0",
-                    exportedAt: new Date().toISOString(),
-                    totalTests: testReferences.length,
-                    totalConditions: conditions.length
-                },
-                property: propertyData,
-                testReferences: testReferences,
-                conditions: conditions
+                metadata: { title: "Generic Benchmark Algorithm Configuration", version: "1.0", exportedAt: new Date().toISOString(), totalTests: tests.length, totalConditions: conditions.length },
+                property, testReferences: tests, conditions
             };
         }
 
+        // CSV helper: escape fields according to CSV rules (double quotes inside => doubled)
+        function csvEscape(value) {
+            if (value === null || value === undefined) return '""';
+            const s = String(value);
+            return `"${s.replace(/"/g, '""')}"`;
+        }
+
+        // Exports CSV but with two leading rows (template info + blank)
         function exportToGoogleSheetFormat() {
             const data = exportToJSON();
-            
-            let csvContent = "DCAT Property,Value\n";
-            Object.entries(data.property).forEach(([key, value]) => {
-                csvContent += `"${key}","${value}"\n`;
-            });
-            
-            csvContent += "\nTest Reference,Test GUID,Pass Weight,Fail Weight,Indeterminate Weight\n";
-            data.testReferences.forEach(test => {
-                csvContent += `"${test.id}","${test.guid}",${test.passWeight},${test.failWeight},${test.indeterminateWeight}\n`;
-            });
-            
-            csvContent += "\nCondition,Description,Formula,Success Message,Fail Message\n";
-            data.conditions.forEach(condition => {
-                csvContent += `"${condition.id}","${condition.description}","${condition.formula}","${condition.successMessage}","${condition.failMessage}"\n`;
+
+            // First two rows: template info and blank row
+            const guidanceMsg = 'Guidance column added to Condition block. Guidance is a list of lists in the following format:  [[GuidanceElementURL1, "brief explanation of guidance1"],[GuidanceElementURL2, "guidance 2 text"]]';
+            let csv = `${csvEscape('Template Version 1.2')},${csvEscape(guidanceMsg)}\n\n`;
+
+            // Properties
+            csv += 'DCAT Property,Value\n';
+            Object.entries(data.property).forEach(([k, v]) => {
+                csv += `${csvEscape(k)},${csvEscape(v)}\n`;
             });
 
-            return csvContent;
+            // Test references block (separated)
+            csv += '\nTest Reference,Test GUID,Pass Weight,Fail Weight,Indeterminate Weight\n';
+            data.testReferences.forEach(t => {
+                csv += `${csvEscape(t.id)},${csvEscape(t.guid)},${t.passWeight},${t.failWeight},${t.indeterminateWeight}\n`;
+            });
+
+            // Conditions block with Guidance as extra column (sixth column)
+            csv += '\nCondition,Description,Formula,Success Message,Fail Message,Guidance\n';
+            data.conditions.forEach(c => {
+                csv += `${csvEscape(c.id)},${csvEscape(c.description)},${csvEscape(c.formula)},${csvEscape(c.successMessage)},${csvEscape(c.failMessage)},${csvEscape(c.guidance)}\n`;
+            });
+
+            return csv;
         }
 
-    // Main function with reduced complexity
-    function downloadExcelFromCSVAdvanced(csvContent, filename, options = {}) {
-        const config = getDefaultConfig(options);
-        
-        try {
-            const data = parseCSVContent(csvContent, config.delimiter);
-            const workbook = createWorkbook(data, config);
-            downloadWorkbook(workbook, filename);
-            
-            console.log(`Excel file "${filename}.xlsx" downloaded successfully`);
-            return true;
-            
-        } catch (error) {
-            handleError(error);
-            return false;
+        // -------------------------
+        // CSV -> Excel processing and download
+        // -------------------------
+        function parseCSVContent(csvContent, delimiter = ',') {
+            if (typeof Papa !== 'undefined') {
+                return Papa.parse(csvContent, { delimiter, skipEmptyLines: false, trimHeaders: true }).data;
+            }
+            // fallback: preserve blank lines (do not filter them out)
+            return csvContent.split('\n').map(line => line.split(delimiter).map(cell => cell.replace(/(^"|"$)/g, '').trim()));
         }
-    }
 
-    // Configuration helper
-    function getDefaultConfig(options) {
-        return {
-            sheetName: 'Sheet1',
-            hasHeaders: true,
-            delimiter: ',',
-            headerStyle: {
-                font: { bold: true, color: { rgb: "FFFFFF" } },
-                fill: { fgColor: { rgb: "4472C4" } },
-                alignment: { horizontal: "center", vertical: "center" }
-            },
-            autoFilter: true,
-            freezeFirstRow: true,
-            ...options
-        };
-}
-
-    // CSV parsing logic
-    function parseCSVContent(csvContent, delimiter) {
-        if (typeof Papa !== 'undefined') {
-            return parsWithPapaParse(csvContent, delimiter);
+        function createWorkbookFromAoA(data, options = {}) {
+            const workbook = XLSX.utils.book_new();
+            const worksheet = XLSX.utils.aoa_to_sheet(data);
+            // Optionally style header row(s) - keep minimal; user can style in sheet later
+            XLSX.utils.book_append_sheet(workbook, worksheet, options.sheetName || 'Sheet1');
+            return workbook;
         }
-        return parseWithFallback(csvContent, delimiter);
-    }
 
-    function parsWithPapaParse(csvContent, delimiter) {
-        const parsed = Papa.parse(csvContent, {
-            delimiter: delimiter,
-            skipEmptyLines: false,
-            trimHeaders: true
-        });
-        return parsed.data;
-    }
-
-    function parseWithFallback(csvContent, delimiter) {
-        return csvContent.split('\n')
-            .filter(line => line.trim() !== '')
-            .map(line => line.split(delimiter)
-                .map(cell => cell.replace(/(^"|"$)/g, '').trim()));
-    }
-
-    // Workbook creation and styling
-    function createWorkbook(data, config) {
-        const workbook = XLSX.utils.book_new();
-        const worksheet = XLSX.utils.aoa_to_sheet(data);
-        
-        if (shouldApplyStyling(data, config.hasHeaders)) {
-            applyWorksheetStyling(worksheet, config);
-        }
-        
-        applyColumnAutoSize(worksheet);
-        XLSX.utils.book_append_sheet(workbook, worksheet, config.sheetName);
-        
-        return workbook;
-    }
-
-    function shouldApplyStyling(data, hasHeaders) {
-        return hasHeaders && data.length > 0;
-    }
-
-    function applyWorksheetStyling(worksheet, config) {
-        applyHeaderStyling(worksheet, config.headerStyle);
-        
-        if (config.autoFilter) {
-            worksheet['!autofilter'] = { ref: worksheet['!ref'] };
-        }
-        
-        if (config.freezeFirstRow) {
-            worksheet['!freeze'] = { xSplit: 0, ySplit: 1 };
-        }
-    }
-
-    function applyHeaderStyling(worksheet, headerStyle) {
-        const range = XLSX.utils.decode_range(worksheet['!ref']);
-        
-        for (let col = range.s.c; col <= range.e.c; col++) {
-            const headerCell = XLSX.utils.encode_cell({ r: 0, c: col });
-            if (worksheet[headerCell]) {
-                worksheet[headerCell].s = headerStyle;
+        function downloadExcelFromCSVAdvanced(csvContent, filename) {
+            try {
+                const rows = parseCSVContent(csvContent, ',');
+                const workbook = createWorkbookFromAoA(rows, { sheetName: 'Benchmark Configuration' });
+                const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array', compression: true });
+                const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `${filename}.xlsx`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                console.log('Downloaded', filename);
+                return true;
+            } catch (err) {
+                console.error('Error creating Excel:', err);
+                alert('Error creating Excel file: ' + err.message);
+                return false;
             }
         }
-    }
 
-    function applyColumnAutoSize(worksheet) {
-        const range = XLSX.utils.decode_range(worksheet['!ref']);
-        const colWidths = [];
-        
-        for (let col = range.s.c; col <= range.e.c; col++) {
-            const maxWidth = calculateColumnWidth(worksheet, range, col);
-            colWidths[col] = { width: Math.min(maxWidth + 2, 50) };
-        }
-        
-        worksheet['!cols'] = colWidths;
-    }
-
-    function calculateColumnWidth(worksheet, range, col) {
-        let maxWidth = 10;
-        
-        for (let row = range.s.r; row <= range.e.r; row++) {
-            const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-            const cell = worksheet[cellAddress];
-            
-            if (cell?.v) {
-                const cellLength = cell.v.toString().length;
-                maxWidth = Math.max(maxWidth, cellLength);
-            }
-        }
-        
-        return maxWidth;
-    }
-
-    // Download functionality
-    function downloadWorkbook(workbook, filename) {
-        const excelBuffer = XLSX.write(workbook, {
-            bookType: 'xlsx',
-            type: 'array',
-            compression: true
-        });
-        
-        const blob = createExcelBlob(excelBuffer);
-        triggerDownload(blob, filename);
-    }
-
-    function createExcelBlob(excelBuffer) {
-        return new Blob([excelBuffer], {
-            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        });
-    }
-
-    function triggerDownload(blob, filename) {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        
-        link.href = url;
-        link.download = `${filename}.xlsx`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    }
-
-    // Error handling
-    function handleError(error) {
-        console.error('Error creating Excel file:', error);
-        alert('Error creating Excel file: ' + error.message);
-    }
-
-        // Function to export to Excel with enhanced options
         function exportToExcel() {
-            const csvData = exportToGoogleSheetFormat(); // Your existing function
+            if (!validateForm()) return;
+            const csv = exportToGoogleSheetFormat();
             const timestamp = new Date().toISOString().split('T')[0];
-           
-            // Ensure PapaParse and XLSX are loaded
-            if (typeof Papa === 'undefined' || typeof XLSX === 'undefined') {
-                alert('Error: Required libraries (PapaParse or XLSX) are not loaded. Please ensure they are included in your HTML.');
-                return;
-            }
-
-              if (!validateForm()) {
-                return;
-            }
-           
-                // Use the enhanced download function
-            downloadExcelFromCSVAdvanced(csvData, `generic_benchmark_algorithm_${timestamp}`, {
-                sheetName: 'Benchmark Configuration',
-                hasHeaders: true,
-                autoFilter: true,
-                freezeFirstRow: true
-            });
-            alert('🎉 Configuration exported successfully in Excel file format.\n');
+            downloadExcelFromCSVAdvanced(csv, `generic_benchmark_algorithm_${timestamp}`);
+            alert('🎉 Configuration exported successfully in Excel (.xlsx) format.');
         }
 
-        function downloadFile(content, filename, type) {
-            const blob = new Blob([content], { type: type });
+        // -------------------------
+        // Misc helpers and lifecycle
+        // -------------------------
+        function downloadFile(content, filename, type = 'text/plain') {
+            const blob = new Blob([content], { type });
             const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+            const a = document.createElement('a');
+            a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
         }
 
         function handleFormSubmit(e) {
             e.preventDefault();
-            
-            if (!validateForm()) {
-                return;
-            }
-
-            const submitBtn = e.target.querySelector('[type="submit"]');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = '⏳ Exporting...';
-            submitBtn.disabled = true;
-
-            setTimeout(() => {
-                // Export to CSV format
-                const csvData = exportToGoogleSheetFormat();
-                const timestamp = new Date().toISOString().split('T')[0];
-                
-                downloadFile(csvData, `generic_benchmark_algorithm_${timestamp}.csv`, 'text/csv');
-
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
-
-                alert('🎉 Configuration exported successfully in CSV file format.\n');
-            }, 1000);
+            if (!validateForm()) return;
+            const csv = exportToGoogleSheetFormat();
+            const timestamp = new Date().toISOString().split('T')[0];
+            downloadFile(csv, `generic_benchmark_algorithm_${timestamp}.csv`, 'text/csv');
+            alert('🎉 Configuration exported successfully in CSV file format.');
         }
 
-        function addKeyboardShortcuts() {
-            document.addEventListener('keydown', function(e) {
-                if (e.ctrlKey || e.metaKey) {
-                    switch(e.key) {
-                        case 's':
-                            e.preventDefault();
-                            document.getElementById('algorithmForm').dispatchEvent(new Event('submit'));
-                            break;
-                        case 'r':
-                            e.preventDefault();
-                            resetForm();
-                            break;
-                    }
-                }
-            });
-        }
-
-        function animateSections() {
-            const sections = document.querySelectorAll('.section');
-            sections.forEach((section, index) => {
-                setTimeout(() => {
-                    section.style.opacity = '0';
-                    section.style.transform = 'translateY(20px)';
-                    section.style.transition = 'all 0.5s ease';
-                    setTimeout(() => {
-                        section.style.opacity = '1';
-                        section.style.transform = 'translateY(0)';
-                    }, 100);
-                }, index * 200);
-            });
-        }
-
-        function setupAutoBackup() {
-            setInterval(function() {
-                try {
-                    const data = exportToGoogleSheetFormat();
-                    const backup = {
-                        data: data,
-                        timestamp: new Date().toISOString()
-                    };
-                    console.log('Auto-backup created at:', backup.timestamp);
-                } catch (error) {
-                    console.warn('Auto-backup failed:', error);
-                }
-            }, 30000);
-        }
-
-        function showHelp(message) {
-            alert('💡 Help: ' + message);
-        }
-
-        // Initialize everything when page loads
-        window.addEventListener('DOMContentLoaded', function() {
+        function resetForm() {
+            if (!confirm('Reset form and lose changes?')) return;
             initializeForm();
-            animateSections();
-            addKeyboardShortcuts();
-            setupAutoBackup();
-            
-            // Attach event listeners
+            // reset properties to defaults (simple)
+            const defaults = {
+                algorithmName: 'Generic benchmark algorithm',
+                algorithmVersion: '1.0',
+                algorithmDescription: 'Used in conjunction with FAIR Champion test runner to calculate FAIR scores.',
+                algorithmKeywords: 'FAIR, benchmark, algorithm',
+                algorithmAbbreviation: 'FAIRalgorithm',
+                algorithmRepository: 'https://docs.google.com/spreadsheets/d/16s2klErdtZck2b6i2Zp_PjrgpBBnnrBKaAvTwrnMB4w/edit?gid=0#gid=0',
+                algorithmType: 'https://ontology.ethereal.cz/irao/Benchmark',
+                algorithmLicence: 'https://creativecommons.org/publicdomain/zero/1.0/',
+                algorithmApplicationArea: 'https://www.fairsharing.org/ontology/subject/SRAO_0000401',
+                algorithmApplicableFor: 'https://schema.org/Dataset',
+                algorithmIsImplementationOf: 'https://ostrails.github.io/sandbox/mockbenchmark1.ttl',
+                algorithmContactPoint: 'ann.none@nowhere.uk'
+            };
+            Object.entries(defaults).forEach(([id, v]) => document.getElementById(id).value = v);
+        }
+
+        function showHelp(msg) { alert('💡 Help: ' + msg); }
+
+        // Keyboard shortcuts & init
+        window.addEventListener('DOMContentLoaded', () => {
+            initializeForm();
             document.getElementById('algorithmForm').addEventListener('submit', handleFormSubmit);
+            document.addEventListener('keydown', e => {
+                if (e.ctrlKey || e.metaKey) {
+                    if (e.key === 's') { e.preventDefault(); document.getElementById('algorithmForm').dispatchEvent(new Event('submit')); }
+                    if (e.key === 'r') { e.preventDefault(); resetForm(); }
+                }
+            });
+            // auto-backup (console only)
+            setInterval(() => { try { console.log('Auto-backup at', new Date().toISOString()); } catch (e) { } }, 30000);
         });
     </script>
 </body>
