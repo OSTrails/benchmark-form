@@ -18,7 +18,7 @@ Knowledge of HTML, and/or access to a drag and drop HTML editing tool.
 
 ## Using the form
 
-1. Download the generic_benchmark_algorithm_editor.html file
+1. Download the [generic_benchmark_algorithm_editor.html](/src/main/html/generic_benchmark_algorithm_editor.html) file
 2. Open the file with a web browser
 3. Edit the general metadata as required
 4. Add one or more [OSTrails tests](https://tests.ostrails.eu/tests/)
