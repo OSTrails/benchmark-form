@@ -10,9 +10,9 @@ Google Sheets Benchmark Algorithm file used in conjunction with the
 The form has four components:
 
 1. General metadata section
-2. Tests and their individual output weights
-3. Conditions/Calculations, based on references to the tests
-4. Guidance, which is intended to be shown in case a test fails
+1. Tests and their individual output weights
+1. Conditions/Calculations, based on references to the tests
+1. Guidance, which is intended to be shown in case a test fails
 
 ## Prerequisites
 
@@ -23,29 +23,29 @@ Knowledge of HTML, and/or access to a drag and drop HTML editing tool.
 1. Download the
    [generic_benchmark_algorithm_editor.html](/src/main/html/generic_benchmark_algorithm_editor.html)
    file
-2. Open the file with a web browser
-3. Optionally, use **Import CSV** to load an existing algorithm (a CSV exported
+1. Open the file with a web browser
+1. Optionally, use **Import CSV** to load an existing algorithm (a CSV exported
    from this form, or the Algorithm tab of a Google Sheet downloaded as CSV).
    This replaces the current form contents
-4. Edit the general metadata as required
-5. Add one or more [OSTrails tests](https://tests.ostrails.eu/tests/)
-6. Add conditions that the tests results must meet
-7. Add Guidance that can help the User work out what to do if a test fails
+1. Edit the general metadata as required
+1. Add one or more [OSTrails tests](https://tests.ostrails.eu/tests/)
+1. Add conditions that the tests results must meet
+1. Add Guidance that can help the User work out what to do if a test fails
    (optional)
-8. Validate the form
-9. Export the contents (in either CSV or Excel format)
-10. If exported in CSV format, import the generated CSV file into a Google
+1. Validate the form
+1. Export the contents (in either CSV or Excel format)
+1. If exported in CSV format, import the generated CSV file into a Google
     Sheets file, otherwise upload the Excel file to Google Docs and open it
     with Google Sheets.
-11. Generate a link with for the spreadsheet with permissions 'Anyone on the
+1. Generate a link with for the spreadsheet with permissions 'Anyone on the
     Internet can edit' (see File->Share->Share with others)
-12. Open the
+1. Open the
     [FAIR Champion Quality Assessment tool](https://tools.ostrails.eu/champion/assess/algorithms/new)
     and use the link in the Benchmark Configuration Spreadsheet URI field
     (spreadsheet must have been registered via
     [Register Benchmark Assessment Algorithm](https://tools.ostrails.eu/champion/algorithms/new))
-13. Enter the URL of a digital object to evaluate in the GUID field
-14. Press the Run Benchmark Quality Assessment button and wait for the results
+1. Enter the URL of a digital object to evaluate in the GUID field
+1. Press the Run Benchmark Quality Assessment button and wait for the results
     to be displayed
 
 There is an example of a generated CSV file
