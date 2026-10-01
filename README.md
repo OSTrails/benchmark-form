@@ -20,23 +20,25 @@ Knowledge of HTML, and/or access to a drag and drop HTML editing tool.
 
 1. Download the [generic_benchmark_algorithm_editor.html](/src/main/html/generic_benchmark_algorithm_editor.html) file
 2. Open the file with a web browser
-3. Edit the general metadata as required
-4. Add one or more [OSTrails tests](https://tests.ostrails.eu/tests/)
-5. Add conditions that the tests results must meet
-6. Add Guidance that can help the User work out what to do if a test fails (optional)
-7. Validate the form
-8. Export the contents (in either CSV or Excel format)
-9. If exported in CSV format, import the generated CSV file into a Google Sheets file,
+3. Optionally, use **Import CSV** to load an existing algorithm (a CSV exported from this form, or the Algorithm tab of a
+Google Sheet downloaded as CSV). This replaces the current form contents
+4. Edit the general metadata as required
+5. Add one or more [OSTrails tests](https://tests.ostrails.eu/tests/)
+6. Add conditions that the tests results must meet
+7. Add Guidance that can help the User work out what to do if a test fails (optional)
+8. Validate the form
+9. Export the contents (in either CSV or Excel format)
+10. If exported in CSV format, import the generated CSV file into a Google Sheets file,
 otherwise upload the Excel file to Google Docs and open it with Google Sheets.
-10. Generate a link with for the spreadsheet with permissions 'Anyone on the Internet can edit' (see File->Share->Share with others)
-11. Open the [FAIR Champion Quality Assessment tool](https://tools.ostrails.eu/champion/assess/algorithms/new) and use the link
+11. Generate a link with for the spreadsheet with permissions 'Anyone on the Internet can edit' (see File->Share->Share with others)
+12. Open the [FAIR Champion Quality Assessment tool](https://tools.ostrails.eu/champion/assess/algorithms/new) and use the link
 in the Benchmark Configuration Spreadsheet URI field (spreadsheet must have been registered via
 [Register Benchmark Assessment Algorithm](https://tools.ostrails.eu/champion/algorithms/new))
-12. Enter the URL of a digital object to evaluate in the GUID field
-13. Press the Run Benchmark Quality Assessment button and wait for the results to be displayed
+13. Enter the URL of a digital object to evaluate in the GUID field
+14. Press the Run Benchmark Quality Assessment button and wait for the results to be displayed
 
-There is an example of a completed form (CDC Benchmark Algorithm Editor.html)
-and a generated CSV file (generic_benchmark_algorithm_2025-08-19.csv) in the example directory.
+There is an example of a generated CSV file (generic_benchmark_algorithm_2025-08-19.csv) in the example directory,
+which can be loaded back into the form with **Import CSV**.
 
 ## Contributing
 

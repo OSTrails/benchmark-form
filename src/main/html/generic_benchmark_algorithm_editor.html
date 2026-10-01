@@ -104,6 +104,8 @@
                 </div>
 
                 <div class="button-group">
+                    <input type="file" id="importFile" accept=".csv,text/csv" style="display:none">
+                    <button type="button" class="btn" onclick="document.getElementById('importFile').click()">📥 Import CSV</button>
                     <button type="button" class="btn" onclick="resetForm()">🔄 Reset Form</button>
                     <button type="button" class="btn" onclick="validateForm()">✅ Validate</button>
                     <button type="button" class="btn" onclick="exportToExcel()">📊 Export to Excel</button>
@@ -131,7 +133,7 @@
 
         // note: added empty guidance field
         const initialConditions = [
-            { id: 'C1', description: 'Metadata are assigned globally unique identifiers', formula: 'T1 > 0', successMessage: 'Acceptable: metadata are assigned globally unique identifiers', failMessage: 'Unacceptable: metadata are not assigned globally unique identifiers', guidance: '[[https://fairsharing.org/6274,FAIR Principles F1-GUID]]' },
+            { id: 'C1', description: 'Metadata are assigned globally unique identifiers', formula: 'T1 > 0', successMessage: 'Acceptable: metadata are assigned globally unique identifiers', failMessage: 'Unacceptable: metadata are not assigned globally unique identifiers', guidance: '[[https://fairsharing.org/6274,"FAIR Principles F1-GUID"]]' },
             { id: 'C2', description: 'Metadata are assigned globally unique identifiers and are registered or indexed in a searchable resource', formula: 'T1 + T2 == 10', successMessage: 'Acceptable: both tests passed', failMessage: 'Unacceptable: one or more tests failed', guidance: '' }
         ];
 
@@ -145,10 +147,18 @@
             return `<button class="help-icon" title="Hover for help" tabindex="0" onclick="showHelp(${JSON.stringify(text)})">❓</button>`;
         }
 
+        // Escape text for safe use in HTML attribute values and element content
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
         function createFormGroup(id, label, type, value = '', attrs = '') {
+            const safe = escapeHtml(value);
             const input = (type === 'textarea')
-                ? `<textarea id="${id}" ${attrs}>${value ?? ''}</textarea>`
-                : `<input id="${id}" type="${type}" value="${value ?? ''}" ${attrs}>`;
+                ? `<textarea id="${id}" ${attrs}>${safe}</textarea>`
+                : `<input id="${id}" type="${type}" value="${safe}" ${attrs}>`;
             return `<div class="form-group"><label for="${id}">${label}</label>${input}</div>`;
         }
 
@@ -164,9 +174,9 @@
                     ${createFormGroup('testId', 'Test ID', 'text', id, 'name="testId" required')}
                     ${createFormGroup('testGuid', 'Enter test GUID (URL)', 'url', data?.guid ?? '', 'name="testGuid" placeholder="https://tests.ostrails.eu/tests/..." required')}
                     <div class="row-three">
-                        ${createFormGroup('passWeight', 'Pass Weight', 'number', data?.passWeight ?? 5, 'name="passWeight" required')}
-                        ${createFormGroup('failWeight', 'Fail Weight', 'number', data?.failWeight ?? -1, 'name="failWeight" required')}
-                        ${createFormGroup('indeterminateWeight', 'Indeterminate Weight', 'number', data?.indeterminateWeight ?? 0, 'name="indeterminateWeight" required')}
+                        ${createFormGroup('passWeight', 'Pass Weight', 'number', data?.passWeight ?? 5, 'name="passWeight" step="any" required')}
+                        ${createFormGroup('failWeight', 'Fail Weight', 'number', data?.failWeight ?? -1, 'name="failWeight" step="any" required')}
+                        ${createFormGroup('indeterminateWeight', 'Indeterminate Weight', 'number', data?.indeterminateWeight ?? 0, 'name="indeterminateWeight" step="any" required')}
                     </div>
                 </div>
             `;
@@ -265,7 +275,7 @@
                 const obj = {};
                 fieldNames.forEach((name, i) => {
                     let v = inputs[i]?.value ?? '';
-                    if (inputs[i]?.type === 'number') v = parseInt(v) || 0;
+                    if (inputs[i]?.type === 'number') v = parseFloat(v) || 0;
                     obj[name] = v;
                 });
                 items.push(obj);
@@ -399,6 +409,77 @@
             alert('🎉 Configuration exported successfully in CSV file format.');
         }
 
+        // -------------------------
+        // CSV import (reads the format produced by exportToGoogleSheetFormat, and the Google Sheet 'Algorithm' tab saved as CSV)
+        // -------------------------
+        const PROPERTY_FIELDS = {
+            title: 'algorithmName', version: 'algorithmVersion', description: 'algorithmDescription',
+            keyword: 'algorithmKeywords', abbreviation: 'algorithmAbbreviation', repository: 'algorithmRepository',
+            type: 'algorithmType', license: 'algorithmLicence', applicationArea: 'algorithmApplicationArea',
+            isApplicableFor: 'algorithmApplicableFor', isImplementationOf: 'algorithmIsImplementationOf',
+            contactPoint: 'algorithmContactPoint'
+        };
+
+        function parseBenchmarkCSV(text) {
+            const rows = parseCSVContent(text.replace(/^\uFEFF/, ''), ',').map(r => r.map(c => (c ?? '')));
+            const cell = (r, i) => (r[i] ?? '').toString();
+            const isBlank = r => r.every(c => !c.toString().trim());
+            const headerIdx = name => rows.findIndex(r => cell(r, 0).trim() === name);
+            const block = start => {
+                const out = [];
+                for (let i = start + 1; i < rows.length && !isBlank(rows[i]); i++) out.push(rows[i]);
+                return out;
+            };
+            const p = headerIdx('DCAT Property'), t = headerIdx('Test Reference'), c = headerIdx('Condition');
+            if (p < 0 || t < 0 || c < 0) {
+                throw new Error('Could not find the "DCAT Property", "Test Reference" and "Condition" header rows.');
+            }
+            const properties = {};
+            block(p).forEach(r => { properties[cell(r, 0).trim()] = cell(r, 1); });
+            const num = v => { const n = parseFloat(v); return Number.isNaN(n) ? 0 : n; };
+            const tests = block(t).map(r => ({
+                id: cell(r, 0).trim(), guid: cell(r, 1).trim(),
+                passWeight: num(cell(r, 2)), failWeight: num(cell(r, 3)), indeterminateWeight: num(cell(r, 4))
+            }));
+            const conditions = block(c).map(r => ({
+                id: cell(r, 0).trim(), description: cell(r, 1), formula: cell(r, 2),
+                successMessage: cell(r, 3), failMessage: cell(r, 4), guidance: cell(r, 5)
+            }));
+            return { properties, tests, conditions };
+        }
+
+        function importFromCSVText(text) {
+            const { properties, tests, conditions } = parseBenchmarkCSV(text);
+            document.getElementById('testReferences').innerHTML = '';
+            document.getElementById('conditions').innerHTML = '';
+            testReferenceCount = 0; conditionCount = 0;
+            Object.entries(PROPERTY_FIELDS).forEach(([key, fieldId]) => {
+                if (key in properties) document.getElementById(fieldId).value = properties[key];
+            });
+            tests.forEach(x => addItem('test', x));
+            conditions.forEach(x => addItem('condition', x));
+            updateStats();
+            return { tests: tests.length, conditions: conditions.length };
+        }
+
+        function handleImportFile(e) {
+            const file = e.target.files[0];
+            e.target.value = '';
+            if (!file) return;
+            if (!confirm('Importing will replace the current form contents. Continue?')) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const n = importFromCSVText(reader.result);
+                    alert(`📥 Imported ${n.tests} test reference(s) and ${n.conditions} condition(s).`);
+                } catch (err) {
+                    alert('Import failed: ' + err.message);
+                }
+            };
+            reader.onerror = () => alert('Import failed: could not read the file.');
+            reader.readAsText(file);
+        }
+
         function resetForm() {
             if (!confirm('Reset form and lose changes?')) return;
             initializeForm();
@@ -426,6 +507,7 @@
         window.addEventListener('DOMContentLoaded', () => {
             initializeForm();
             document.getElementById('algorithmForm').addEventListener('submit', handleFormSubmit);
+            document.getElementById('importFile').addEventListener('change', handleImportFile);
             document.addEventListener('keydown', e => {
                 if (e.ctrlKey || e.metaKey) {
                     if (e.key === 's') { e.preventDefault(); document.getElementById('algorithmForm').dispatchEvent(new Event('submit')); }
