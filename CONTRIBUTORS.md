@@ -1,7 +1,7 @@
-# CESSDA.CDC.SEARCHKIT v2.3.0
+# Benchmark Form
 
 ## Contributors
 
-Name            | Email                     | Role
-:---            | :---                      | :---
-John Shepherdson | john DOT shepherdson AT cessda DOT eu | Project Consultant
+|Name|Email|Role|
+|:---|:---|:---|
+|John Shepherdson|john DOT shepherdson AT cessda DOT eu|Project Consultant|

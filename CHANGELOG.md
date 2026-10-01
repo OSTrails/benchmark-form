@@ -18,11 +18,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
-- Import CSV button, which loads a previously exported CSV (or the Algorithm tab of a Google Sheet saved as CSV) into the form
+- Import CSV button, which loads a previously exported CSV (or the Algorithm
+  tab of a Google Sheet saved as CSV) into the form
 
 ### Changed
 
-- Default guidance example now quotes its label, matching the format `[[URL,"label"],[URL,"label"]]`
+- Default guidance example now quotes its label, matching the format
+  `[[URL,"label"],[URL,"label"]]`
 - Weights may now be decimal numbers (previously truncated to integers)
 
 ### Deprecated
@@ -31,6 +33,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
-- Values containing quotes (e.g. Guidance) were truncated, and values containing `<` or `&` were corrupted, when the form was pre-filled
+- Values containing quotes (e.g. Guidance) were truncated, and values
+  containing `<` or `&` were corrupted, when the form was pre-filled
 
 ### Security

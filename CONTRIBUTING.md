@@ -16,7 +16,7 @@ deems appropriate and are of acceptable quality.
 Specific requirements and criteria may apply to specific tools.
 
 If you want to contribute to OSTrails tools and services,
-please contact info@OSTrails.eu before proceeding.
+please contact <info@OSTrails.eu> before proceeding.
 
 ### Practical matters
 
