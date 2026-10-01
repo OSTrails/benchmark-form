@@ -1,0 +1,31 @@
+const {JSDOM}=require('jsdom'),fs=require('fs'),Papa=require('papaparse');
+const S=JSON.parse(fs.readFileSync('sheet.json'));
+const html=fs.readFileSync('../repo/src/main/html/generic_benchmark_algorithm_editor.html','utf8').replace(/<script src=[^>]*><\/script>/g,'');
+const dom=new JSDOM(html,{runScripts:'dangerously',pretendToBeVisual:true});
+const w=dom.window; w.confirm=()=>true; w.alert=()=>{};
+w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
+w.document.getElementById('testReferences').innerHTML='';w.document.getElementById('conditions').innerHTML='';
+w.eval('testReferenceCount=0;conditionCount=0');
+const ids={title:'algorithmName',version:'algorithmVersion',description:'algorithmDescription',keyword:'algorithmKeywords',abbreviation:'algorithmAbbreviation',repository:'algorithmRepository',type:'algorithmType',license:'algorithmLicence',applicationArea:'algorithmApplicationArea',isApplicableFor:'algorithmApplicableFor',isImplementationOf:'algorithmIsImplementationOf',contactPoint:'algorithmContactPoint'};
+S.prop.forEach(([k,v])=>w.document.getElementById(ids[k]).value=v);
+S.tests.forEach(t=>w.addItem('test',{id:t[0],guid:t[1],passWeight:t[2],failWeight:t[3],indeterminateWeight:t[4]}));
+S.conds.forEach(c=>w.addItem('condition',{id:c[0],description:c[1],formula:c[2],successMessage:c[3],failMessage:c[4],guidance:c[5]??''}));
+const csv=w.exportToGoogleSheetFormat();
+fs.writeFileSync('out.csv',csv);
+const rows=Papa.parse(csv).data;
+let diffs=0;const d=(m)=>{diffs++;console.log('DIFF',m)};
+// locate blocks
+const iT=rows.findIndex(r=>r[0]==='Test Reference'),iC=rows.findIndex(r=>r[0]==='Condition');
+console.log('row0',rows[0][0]==S.a1, rows[0][1]===S.b1, 'blank row1',rows[1].join('')==='');
+S.prop.forEach(([k,v],i)=>{const r=rows[3+i]; if(r[0]!==k||r[1]!==String(v)) d(`prop ${k}: ${JSON.stringify(r[1])} vs ${JSON.stringify(v)}`)});
+S.tests.forEach((t,i)=>{const r=rows[iT+1+i];const e=[t[0],t[1],String(parseInt(t[2])),String(parseInt(t[3])),String(parseInt(t[4]))];
+  if(r[0]!==e[0]||r[1]!==t[1]||+r[2]!==+t[2]||+r[3]!==+t[3]||+r[4]!==+t[4]) d(`test ${t[0]}: got ${JSON.stringify(r)} want ${JSON.stringify(t)}`)});
+S.conds.forEach((c,i)=>{const r=rows[iC+1+i];c.forEach((v,j)=>{ if((r[j]??'')!==(v??'')) d(`cond ${c[0]} col${j}: got ${JSON.stringify(r[j]).slice(0,90)} want ${JSON.stringify(v).slice(0,90)}`)})});
+console.log('rows exported: tests',iC-iT-2,'conds',rows.length-iC-1-(rows[rows.length-1].join('')===''?1:0),'diffs',diffs);
+// extra probes
+w.addItem('test'); w.addItem('test');
+const ids2=[...w.document.querySelectorAll('.test-reference-item input[name=testId]')].map(i=>i.value);
+console.log('ids after adds',ids2.slice(-3));
+w.removeElement(w.document.querySelectorAll('.test-reference-item')[0]); w.addItem('test');
+console.log('after remove+add',[...w.document.querySelectorAll('.test-reference-item input[name=testId]')].map(i=>i.value).slice(-3));
+console.log('dup DOM ids testId:',w.document.querySelectorAll('[id=testId]').length);
