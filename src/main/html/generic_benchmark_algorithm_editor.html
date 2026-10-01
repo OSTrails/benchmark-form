@@ -3,7 +3,7 @@
 <!--
     File: generic_benchmark_algorithm_editor.html
     Updated: Add Guidance column for Conditions and prepend two header rows in exports.
-    TODO: Review the use of the 'xxxCount--' code in the removeElement function.
+    Default IDs are derived from the items currently on the form (no separate counters to keep in sync).
 -->
 <head>
     <meta charset="UTF-8" />
@@ -24,9 +24,9 @@
     <style>
         /* --- (styles unchanged / slightly trimmed for brevity) --- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Google Sans', Roboto, Arial, sans-serif; background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:#202124; min-height:100vh; line-height:1.6; }
-        .container{max-width:900px;margin:20px auto;background:white;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.1);overflow:hidden;}
-        .header{background:linear-gradient(135deg,#c5f442 0%,#47b73a 100%);color:white;padding:32px 24px;text-align:center;position:relative;overflow:hidden;}
+        body { font-family: 'Google Sans', Roboto, Arial, sans-serif; background: linear-gradient(135deg,#3f51b5 0%,#4a148c 100%); color:#fff; min-height:100vh; line-height:1.6; }
+        .container{color:#202124;max-width:900px;margin:20px auto;background:white;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.1);overflow:hidden;}
+        .header{background:linear-gradient(135deg,#2e7d32 0%,#1b5e20 100%);color:white;padding:32px 24px;text-align:center;position:relative;overflow:hidden;}
         .header h1{font-size:28px;font-weight:300;margin-bottom:8px}
         .form-content{padding:32px 24px;}
         .section{margin-bottom:40px;border:1px solid #e8eaed;border-radius:12px;overflow:hidden}
@@ -41,9 +41,9 @@
         .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
         .row-three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
         .btn{border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer}
-        .btn-primary{background:linear-gradient(135deg,#4285f4 0%,#1a73e8 100%);color:white;padding:12px 22px}
-        .add-btn{background:linear-gradient(135deg,#34a853 0%,#2d7d32 100%);color:white;padding:8px 16px;border-radius:8px}
-        .remove-btn{background:linear-gradient(135deg,#ea4335 0%,#d33b2c 100%);color:white;padding:6px 10px;border-radius:6px}
+        .btn-primary{background:linear-gradient(135deg,#1a73e8 0%,#1557b0 100%);color:white;padding:12px 22px}
+        .add-btn{background:linear-gradient(135deg,#2e7d32 0%,#1b5e20 100%);color:white;padding:8px 16px;border-radius:8px}
+        .remove-btn{background:linear-gradient(135deg,#c5221f 0%,#a50e0e 100%);color:white;padding:6px 10px;border-radius:6px}
         .help-icon{cursor:help;background:none;border:none;padding:0;font:inherit}
         .button-group{display:flex;justify-content:center;gap:12px;margin-top:24px;padding-top:16px;border-top:2px solid #f1f3f4}
         @media (max-width:768px) { .row,.row-three{grid-template-columns:1fr} .container{margin:10px} }
@@ -137,8 +137,14 @@
             { id: 'C2', description: 'Metadata are assigned globally unique identifiers and are registered or indexed in a searchable resource', formula: 'T1 + T2 == 10', successMessage: 'Acceptable: both tests passed', failMessage: 'Unacceptable: one or more tests failed', guidance: '' }
         ];
 
-        let testReferenceCount = 0;
-        let conditionCount = 0;
+        // Next unused ID for an item type (T1, T2, ... / C1, C2, ...), based on the items currently on the form
+        function nextItemId(cfg) {
+            const used = new Set(Array.from(document.querySelectorAll(`#${cfg.containerId} .${cfg.class} input[name$="Id"]`))
+                .map(input => input.value.trim()));
+            let n = used.size + 1;
+            while (used.has(cfg.prefix + n)) n++;
+            return cfg.prefix + n;
+        }
 
         // -------------------------
         // Utilities
@@ -150,8 +156,8 @@
         // Escape text for safe use in HTML attribute values and element content
         function escapeHtml(value) {
             return String(value ?? '')
-                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;').replaceAll("'", '&#39;');
         }
 
         function createFormGroup(id, label, type, value = '', attrs = '') {
@@ -167,7 +173,7 @@
         // -------------------------
         function generateTestReferenceTemplate(data) {
             const cfg = CONFIG.itemTypes.test;
-            const id = data?.id ?? (cfg.prefix + (testReferenceCount + 1));
+            const id = data?.id ?? nextItemId(cfg);
             return `
                 <div class="item ${cfg.class}">
                     <div class="item-header"><h4>${cfg.icon} ${id}</h4><button type="button" class="remove-btn" onclick="removeElement(this.closest('.${cfg.class}'))">Remove</button></div>
@@ -184,7 +190,7 @@
 
         function generateConditionTemplate(data) {
             const cfg = CONFIG.itemTypes.condition;
-            const id = data?.id ?? (cfg.prefix + (conditionCount + 1));
+            const id = data?.id ?? nextItemId(cfg);
             // Keep input order consistent with export mapping: id, description, formula, successMessage, failMessage, guidance
             return `
                 <div class="item ${cfg.class}">
@@ -211,22 +217,18 @@
             const div = document.createElement('div');
             div.innerHTML = (type === 'test') ? generateTestReferenceTemplate(data) : generateConditionTemplate(data);
             container.appendChild(div.firstElementChild);
-            if (type === 'test') testReferenceCount++; else conditionCount++;
             updateStats();
         }
 
         function removeElement(el) {
             if (!confirm('Are you sure you want to remove this item?')) return;
-            const isTest = el.classList.contains(CONFIG.itemTypes.test.class);
             el.remove();
-            if (isTest) testReferenceCount = Math.max(0, testReferenceCount - 1); else conditionCount = Math.max(0, conditionCount - 1);
             updateStats();
         }
 
         function initializeForm() {
             document.getElementById('testReferences').innerHTML = '';
             document.getElementById('conditions').innerHTML = '';
-            testReferenceCount = 0; conditionCount = 0;
             initialTestReferences.forEach(t => addItem('test', t));
             initialConditions.forEach(c => addItem('condition', c));
             updateStats();
@@ -275,7 +277,7 @@
                 const obj = {};
                 fieldNames.forEach((name, i) => {
                     let v = inputs[i]?.value ?? '';
-                    if (inputs[i]?.type === 'number') v = parseFloat(v) || 0;
+                    if (inputs[i]?.type === 'number') v = Number.parseFloat(v) || 0;
                     obj[name] = v;
                 });
                 items.push(obj);
@@ -313,7 +315,7 @@
         function csvEscape(value) {
             if (value === null || value === undefined) return '""';
             const s = String(value);
-            return `"${s.replace(/"/g, '""')}"`;
+            return `"${s.replaceAll('"', '""')}"`;
         }
 
         // Exports CSV but with two leading rows (template info + blank)
@@ -353,7 +355,7 @@
                 return Papa.parse(csvContent, { delimiter, skipEmptyLines: false, trimHeaders: true }).data;
             }
             // fallback: preserve blank lines (do not filter them out)
-            return csvContent.split('\n').map(line => line.split(delimiter).map(cell => cell.replace(/(^"|"$)/g, '').trim()));
+            return csvContent.split('\n').map(line => line.split(delimiter).map(cell => cell.replaceAll(/(^"|"$)/g, '').trim()));
         }
 
         function createWorkbookFromAoA(data, options = {}) {
@@ -436,7 +438,7 @@
             }
             const properties = {};
             block(p).forEach(r => { properties[cell(r, 0).trim()] = cell(r, 1); });
-            const num = v => { const n = parseFloat(v); return Number.isNaN(n) ? 0 : n; };
+            const num = v => { const n = Number.parseFloat(v); return Number.isNaN(n) ? 0 : n; };
             const tests = block(t).map(r => ({
                 id: cell(r, 0).trim(), guid: cell(r, 1).trim(),
                 passWeight: num(cell(r, 2)), failWeight: num(cell(r, 3)), indeterminateWeight: num(cell(r, 4))
@@ -452,7 +454,6 @@
             const { properties, tests, conditions } = parseBenchmarkCSV(text);
             document.getElementById('testReferences').innerHTML = '';
             document.getElementById('conditions').innerHTML = '';
-            testReferenceCount = 0; conditionCount = 0;
             Object.entries(PROPERTY_FIELDS).forEach(([key, fieldId]) => {
                 if (key in properties) document.getElementById(fieldId).value = properties[key];
             });
@@ -467,17 +468,10 @@
             e.target.value = '';
             if (!file) return;
             if (!confirm('Importing will replace the current form contents. Continue?')) return;
-            const reader = new FileReader();
-            reader.onload = () => {
-                try {
-                    const n = importFromCSVText(reader.result);
-                    alert(`📥 Imported ${n.tests} test reference(s) and ${n.conditions} condition(s).`);
-                } catch (err) {
-                    alert('Import failed: ' + err.message);
-                }
-            };
-            reader.onerror = () => alert('Import failed: could not read the file.');
-            reader.readAsText(file);
+            file.text().then(text => {
+                const n = importFromCSVText(text);
+                alert(`📥 Imported ${n.tests} test reference(s) and ${n.conditions} condition(s).`);
+            }).catch(err => alert('Import failed: ' + err.message));
         }
 
         function resetForm() {
